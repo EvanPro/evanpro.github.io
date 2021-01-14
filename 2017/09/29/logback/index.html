@@ -6,10 +6,10 @@
 
 
 <html class="theme-next mist use-motion" lang="zh-Hans">
-<head>
-  <meta charset="UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="theme-color" content="#222">
 
 
@@ -20,8 +20,8 @@
 
 
 
-<meta http-equiv="Cache-Control" content="no-transform" />
-<meta http-equiv="Cache-Control" content="no-siteapp" />
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
 
 
 
@@ -40,7 +40,7 @@
 
   
   
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
 
 
 
@@ -48,9 +48,9 @@
 
 
 
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
 
-<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
 
 
   <link rel="apple-touch-icon" sizes="180x180" href="/fav.ico?v=5.1.4">
@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Java," />
+  <meta name="keywords" content="Java,">
 
 
 
@@ -84,7 +84,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="logback学习笔记">
 <meta property="og:url" content="http://yoursite.com/2017/09/29/logback/index.html">
-<meta property="og:site_name" content="It&#39;s Evan">
+<meta property="og:site_name" content="Evan&#39;s Blog">
 <meta property="og:description" content="架构logback分为三个模块：logback-core、logback-classic、logback-access。core模块是另外两个模块的基础。classic模块拓展了core模块，它相当于一个升级版的log4j。logback-classic原生地实现了SL4J API。 access模块与servlet容器整合提供HTTP访问日志功能。">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:updated_time" content="2017-09-30T01:43:21.495Z">
@@ -120,13 +120,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/09/29/logback/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/09/29/logback/">
 
 
 
 
 
-  <title>logback学习笔记 | It's Evan</title>
+  <title>logback学习笔记 | Evan's Blog</title>
   
 
 
@@ -154,9 +154,9 @@
     
 
     <div class="custom-logo-site-title">
-      <a href="/"  class="brand" rel="start">
+      <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">It's Evan</span>
+        <span class="site-title">Evan's Blog</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
@@ -184,7 +184,7 @@
         <li class="menu-item menu-item-home">
           <a href="/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
             
             首页
           </a>
@@ -194,7 +194,7 @@
         <li class="menu-item menu-item-categories">
           <a href="/categories/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
             
             分类
           </a>
@@ -204,7 +204,7 @@
         <li class="menu-item menu-item-archives">
           <a href="/archives/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
             
             归档
           </a>
@@ -247,12 +247,12 @@
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Evan Wang">
-      <meta itemprop="description" content="">
+      <meta itemprop="description" content>
       <meta itemprop="image" content="/uploads/avatar.png">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="It's Evan">
+      <meta itemprop="name" content="Evan's Blog">
     </span>
 
     
@@ -283,7 +283,7 @@
           </span>
 
           
-            <span class="post-category" >
+            <span class="post-category">
             
               <span class="post-meta-divider">|</span>
             
@@ -351,8 +351,8 @@
 <h5 id="打印方法和基本的选取规则"><a href="#打印方法和基本的选取规则" class="headerlink" title="打印方法和基本的选取规则"></a>打印方法和基本的选取规则</h5><p>打印方法决定了一个日志请求(logging request)的level。如果一个日志请求(logging request)的level高于或等于当前<em>logger</em>实际的level，那么这个日志请求(logging request)是可用的。<br>level顺序：<font color="red">TRACE &lt; DEBUG &lt; INFO &lt;  WARN &lt; ERROR </font></p>
 <h3 id="Appenders-and-Layouts"><a href="#Appenders-and-Layouts" class="headerlink" title="Appenders and Layouts"></a>Appenders and Layouts</h3><p>在logback中，一个输出目标就是一个<em>appender</em>。一个<em>logger</em> 可以配置多个<em>appender</em>。   <em>logger</em> L的日志语句将会输出到它的所有<em>appender</em>和他的祖先，这就是<strong>appender additivity</strong>。然而，如果L的一个祖先叫做P设置了additivity flag 为 false，那么L的日志语句将会输出到L<font color="red">到</font>祖先P的所有<em>appender</em>，但不包括P的祖先的<em>appender</em>。<em>logger</em> 的additivity flag默认为true。</p>
 <p><em>layout</em> 是配置到<em>appender</em>上的。<em>layout</em> 是负责格式化输出字符串的组件。  </p>
-<h5 id="参数化日志"><a href="#参数化日志" class="headerlink" title="参数化日志"></a>参数化日志</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Object entry = <span class="keyword">new</span> SomeObject();</div><div class="line">logger.debug(<span class="string">"The entry is &#123;&#125;."</span>, entry);</div></pre></td></tr></table></figure>
-<p>只有在logback评估确定打印日志后，<em>logger</em> 实现才会格式化字符串并且用entry的字符串值替换{}。换句话说，如果日志语句不生效，logback不会构造参数并格式化。<br>如果要传入多个参数可以用对象数组代替：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Object[] paramArray = &#123;newVal, below, above&#125;;</div><div class="line">logger.debug(<span class="string">"Value &#123;&#125; was inserted between &#123;&#125; and &#123;&#125;."</span>, paramArray);</div></pre></td></tr></table></figure></p>
+<h5 id="参数化日志"><a href="#参数化日志" class="headerlink" title="参数化日志"></a>参数化日志</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Object entry = <span class="keyword">new</span> SomeObject();</span><br><span class="line">logger.debug(<span class="string">"The entry is &#123;&#125;."</span>, entry);</span><br></pre></td></tr></table></figure>
+<p>只有在logback评估确定打印日志后，<em>logger</em> 实现才会格式化字符串并且用entry的字符串值替换{}。换句话说，如果日志语句不生效，logback不会构造参数并格式化。<br>如果要传入多个参数可以用对象数组代替：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Object[] paramArray = &#123;newVal, below, above&#125;;</span><br><span class="line">logger.debug(<span class="string">"Value &#123;&#125; was inserted between &#123;&#125; and &#123;&#125;."</span>, paramArray);</span><br></pre></td></tr></table></figure></p>
 <h2 id="配置logback"><a href="#配置logback" class="headerlink" title="配置logback"></a>配置logback</h2><p>logback会尝试通过以下几步自我配置：</p>
 <ol>
 <li>在classpath中查找logback.groovy</li>
@@ -363,7 +363,7 @@
 <li>如果以上步骤都失败，logback将会自动应用BasicConfigurator直接将日志输出到控制台。  </li>
 </ol>
 <p>如果使用mavne构建项目，那么可以将logback-test.xml放到src/test/resources文件夹下，maven会确保它不会被放到artifact produced中。因此，你可以用logback-test.xml进行测试，用logback.xml进行正式环境部署。</p>
-<h5 id="自动重载修改的配置文件"><a href="#自动重载修改的配置文件" class="headerlink" title="自动重载修改的配置文件"></a>自动重载修改的配置文件</h5><p>默认地，logback会每隔一分钟扫描一次配置文件。也可以自己设置，可选单位：milliseconds, seconds, minutes 和 hours。如果没有指定单位，默认milliseconds。<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">configuration</span> <span class="attr">scan</span>=<span class="string">"true"</span> <span class="attr">scanPeriod</span>=<span class="string">"30 seconds"</span> &gt;</span></div><div class="line">  ...</div><div class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></div></pre></td></tr></table></figure></p>
+<h5 id="自动重载修改的配置文件"><a href="#自动重载修改的配置文件" class="headerlink" title="自动重载修改的配置文件"></a>自动重载修改的配置文件</h5><p>默认地，logback会每隔一分钟扫描一次配置文件。也可以自己设置，可选单位：milliseconds, seconds, minutes 和 hours。如果没有指定单位，默认milliseconds。<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">configuration</span> <span class="attr">scan</span>=<span class="string">"true"</span> <span class="attr">scanPeriod</span>=<span class="string">"30 seconds"</span> &gt;</span></span><br><span class="line">  ...</span><br><span class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
 <h5 id="lt-logger-gt-标签"><a href="#lt-logger-gt-标签" class="headerlink" title="&lt;logger&gt;标签"></a>&lt;logger&gt;标签</h5><ul>
 <li>必需的name属性</li>
 <li>可选的level属性，可接受大小写不敏感的值：TRACE, DEBUG, INFO, WARN, ERROR, ALL 和 OFF，特殊的INHERITED或者NULL会强制logger继承父logger的level</li>
@@ -377,10 +377,10 @@
 <li>包含零个或多个&lt;filter&gt;元素，有一个必需的class属性  </li>
 </ul>
 <p>除了这三个公共元素外，&lt;appender&gt;元素可以包含任意数量的appender类的javabean属性。</p>
-<h5 id="设置context-name"><a href="#设置context-name" class="headerlink" title="设置context name"></a>设置context name</h5><p>默认地，context name名字是default。 可以用&lt;contextName&gt;设置以区分指向相同目标的不同应用的日志。<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="name">contextName</span>&gt;</span>myAppName<span class="tag">&lt;/<span class="name">contextName</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">"STDOUT"</span> <span class="attr">class</span>=<span class="string">"ch.qos.logback.core.ConsoleAppender"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">encoder</span>&gt;</span></div><div class="line">      <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>%d %contextName [%t] %level %logger&#123;36&#125; - %msg%n<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></div><div class="line">  <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></div><div class="line"></div><div class="line">  <span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">"debug"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">"STDOUT"</span> /&gt;</span></div><div class="line">  <span class="tag">&lt;/<span class="name">root</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></div></pre></td></tr></table></figure></p>
-<h5 id="变量替换"><a href="#变量替换" class="headerlink" title="变量替换"></a>变量替换</h5><figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></div><div class="line"></div><div class="line">  <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"USER_HOME"</span> <span class="attr">value</span>=<span class="string">"/home/sebastien"</span> /&gt;</span></div><div class="line"></div><div class="line">  <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">"FILE"</span> <span class="attr">class</span>=<span class="string">"ch.qos.logback.core.FileAppender"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">file</span>&gt;</span>$&#123;USER_HOME&#125;/myApp.log<span class="tag">&lt;/<span class="name">file</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">encoder</span>&gt;</span></div><div class="line">      <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>%msg%n<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></div><div class="line">  <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></div><div class="line"></div><div class="line">  <span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">"debug"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">"FILE"</span> /&gt;</span></div><div class="line">  <span class="tag">&lt;/<span class="name">root</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></div></pre></td></tr></table></figure>
-<p>变量除了可以定义在配置文件内以外，还可以定义在其他文件中：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></div><div class="line"></div><div class="line">  <span class="tag">&lt;<span class="name">property</span> <span class="attr">file</span>=<span class="string">"src/main/java/chapters/configuration/variables1.properties"</span> /&gt;</span></div><div class="line"></div><div class="line">  <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">"FILE"</span> <span class="attr">class</span>=<span class="string">"ch.qos.logback.core.FileAppender"</span>&gt;</span></div><div class="line">     <span class="tag">&lt;<span class="name">file</span>&gt;</span>$&#123;USER_HOME&#125;/myApp.log<span class="tag">&lt;/<span class="name">file</span>&gt;</span></div><div class="line">     <span class="tag">&lt;<span class="name">encoder</span>&gt;</span></div><div class="line">       <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>%msg%n<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></div><div class="line">     <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></div><div class="line">   <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></div><div class="line"></div><div class="line">   <span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">"debug"</span>&gt;</span></div><div class="line">     <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">"FILE"</span> /&gt;</span></div><div class="line">   <span class="tag">&lt;/<span class="name">root</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></div></pre></td></tr></table></figure></p>
-<p>或者定义在class path上的资源：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></div><div class="line"></div><div class="line">  <span class="tag">&lt;<span class="name">property</span> <span class="attr">resource</span>=<span class="string">"resource1.properties"</span> /&gt;</span></div><div class="line"></div><div class="line">  <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">"FILE"</span> <span class="attr">class</span>=<span class="string">"ch.qos.logback.core.FileAppender"</span>&gt;</span></div><div class="line">     <span class="tag">&lt;<span class="name">file</span>&gt;</span>$&#123;USER_HOME&#125;/myApp.log<span class="tag">&lt;/<span class="name">file</span>&gt;</span></div><div class="line">     <span class="tag">&lt;<span class="name">encoder</span>&gt;</span></div><div class="line">       <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>%msg%n<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></div><div class="line">     <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></div><div class="line">   <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></div><div class="line"></div><div class="line">   <span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">"debug"</span>&gt;</span></div><div class="line">     <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">"FILE"</span> /&gt;</span></div><div class="line">   <span class="tag">&lt;/<span class="name">root</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></div></pre></td></tr></table></figure></p>
+<h5 id="设置context-name"><a href="#设置context-name" class="headerlink" title="设置context name"></a>设置context name</h5><p>默认地，context name名字是default。 可以用&lt;contextName&gt;设置以区分指向相同目标的不同应用的日志。<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">contextName</span>&gt;</span>myAppName<span class="tag">&lt;/<span class="name">contextName</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">"STDOUT"</span> <span class="attr">class</span>=<span class="string">"ch.qos.logback.core.ConsoleAppender"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">encoder</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>%d %contextName [%t] %level %logger&#123;36&#125; - %msg%n<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">"debug"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">"STDOUT"</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">root</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<h5 id="变量替换"><a href="#变量替换" class="headerlink" title="变量替换"></a>变量替换</h5><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"USER_HOME"</span> <span class="attr">value</span>=<span class="string">"/home/sebastien"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">"FILE"</span> <span class="attr">class</span>=<span class="string">"ch.qos.logback.core.FileAppender"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">file</span>&gt;</span>$&#123;USER_HOME&#125;/myApp.log<span class="tag">&lt;/<span class="name">file</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">encoder</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>%msg%n<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">"debug"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">"FILE"</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">root</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>变量除了可以定义在配置文件内以外，还可以定义在其他文件中：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">property</span> <span class="attr">file</span>=<span class="string">"src/main/java/chapters/configuration/variables1.properties"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">"FILE"</span> <span class="attr">class</span>=<span class="string">"ch.qos.logback.core.FileAppender"</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">file</span>&gt;</span>$&#123;USER_HOME&#125;/myApp.log<span class="tag">&lt;/<span class="name">file</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">encoder</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>%msg%n<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></span><br><span class="line"></span><br><span class="line">   <span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">"debug"</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">"FILE"</span> /&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">root</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>或者定义在class path上的资源：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">property</span> <span class="attr">resource</span>=<span class="string">"resource1.properties"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">"FILE"</span> <span class="attr">class</span>=<span class="string">"ch.qos.logback.core.FileAppender"</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">file</span>&gt;</span>$&#123;USER_HOME&#125;/myApp.log<span class="tag">&lt;/<span class="name">file</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">encoder</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>%msg%n<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></span><br><span class="line"></span><br><span class="line">   <span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">"debug"</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">"FILE"</span> /&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">root</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
 
       
     </div>
@@ -489,9 +489,7 @@
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
-              <img class="site-author-image" itemprop="image"
-                src="/uploads/avatar.png"
-                alt="Evan Wang" />
+              <img class="site-author-image" itemprop="image" src="/uploads/avatar.png" alt="Evan Wang">
             
               <p class="site-author-name" itemprop="name">Evan Wang</p>
               <p class="site-description motion-element" itemprop="description">少年书生志气宏</p>
@@ -575,7 +573,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#架构"><span class="nav-number">1.</span> <span class="nav-text">架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Logger-Appenders-and-Layouts"><span class="nav-number">2.</span> <span class="nav-text">Logger, Appenders and Layouts</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Logger容器-Logger-context"><span class="nav-number">2.1.</span> <span class="nav-text">Logger容器(Logger context)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#等级继承"><span class="nav-number">2.1.0.1.</span> <span class="nav-text">等级继承</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#打印方法和基本的选取规则"><span class="nav-number">2.1.0.2.</span> <span class="nav-text">打印方法和基本的选取规则</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Appenders-and-Layouts"><span class="nav-number">2.2.</span> <span class="nav-text">Appenders and Layouts</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#参数化日志"><span class="nav-number">2.2.0.1.</span> <span class="nav-text">参数化日志</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置logback"><span class="nav-number">3.</span> <span class="nav-text">配置logback</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#自动重载修改的配置文件"><span class="nav-number">3.0.0.1.</span> <span class="nav-text">自动重载修改的配置文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#lt-logger-gt-标签"><span class="nav-number">3.0.0.2.</span> <span class="nav-text"><logger>标签</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#lt-appender-gt-标签"><span class="nav-number">3.0.0.3.</span> <span class="nav-text"><appender>标签</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#设置context-name"><span class="nav-number">3.0.0.4.</span> <span class="nav-text">设置context name</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#变量替换"><span class="nav-number">3.0.0.5.</span> <span class="nav-text">变量替换</span></a></li></ol></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#架构"><span class="nav-number">1.</span> <span class="nav-text">架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Logger-Appenders-and-Layouts"><span class="nav-number">2.</span> <span class="nav-text">Logger, Appenders and Layouts</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Logger容器-Logger-context"><span class="nav-number">2.1.</span> <span class="nav-text">Logger容器(Logger context)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#等级继承"><span class="nav-number">2.1.0.1.</span> <span class="nav-text">等级继承</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#打印方法和基本的选取规则"><span class="nav-number">2.1.0.2.</span> <span class="nav-text">打印方法和基本的选取规则</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Appenders-and-Layouts"><span class="nav-number">2.2.</span> <span class="nav-text">Appenders and Layouts</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#参数化日志"><span class="nav-number">2.2.0.1.</span> <span class="nav-text">参数化日志</span></a></li></ol></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#配置logback"><span class="nav-number">3.</span> <span class="nav-text">配置logback</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#自动重载修改的配置文件"><span class="nav-number">3.0.0.1.</span> <span class="nav-text">自动重载修改的配置文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#lt-logger-gt-标签"><span class="nav-number">3.0.0.2.</span> <span class="nav-text">&lt;logger&gt;标签</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#lt-appender-gt-标签"><span class="nav-number">3.0.0.3.</span> <span class="nav-text">&lt;appender&gt;标签</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#设置context-name"><span class="nav-number">3.0.0.4.</span> <span class="nav-text">设置context name</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#变量替换"><span class="nav-number">3.0.0.5.</span> <span class="nav-text">变量替换</span></a></li></ol></li></div>
             
 
           </div>
@@ -595,7 +593,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-road"></i>
   </span>
