@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>Spring Boot应用结构 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Spring Boot应用结构</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">一月 14, 2021</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/Spring-Boot/">Spring Boot</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>本系列基于Spring Boot 2.2.6.RELEASE编写。</p>
+<p><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-boot/docs/2.2.6.RELEASE/reference/html/">官方文档链接</a></p>
+<p>为了探究Spring Boot应用的Jar包结构，我们使用Maven构建Spring Boot应用。</p>
+<a id="more"></a>
+<h2 id="创建Spring-Boot应用"><a href="#创建Spring-Boot应用" class="headerlink" title="创建Spring Boot应用"></a>创建Spring Boot应用</h2><p>首先创建一个标准Maven工程（Maven3.6.2）：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn archetype:generate <span class="literal">-DinteractiveMode</span>=false <span class="literal">-DgroupId</span>=“com.evan” <span class="literal">-DartifactId</span>=first<span class="literal">-spring</span><span class="literal">-boot</span><span class="literal">-application</span></span><br></pre></td></tr></table></figure>
+<p>Build成功后，增加Spring Boot依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">project</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://maven.apache.org/POM/4.0.0&quot;</span> <span class="attr">xmlns:xsi</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span></span><br><span class="line"><span class="tag">  <span class="attr">xsi:schemaLocation</span>=<span class="string">&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">modelVersion</span>&gt;</span>4.0.0<span class="tag">&lt;/<span class="name">modelVersion</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.evan<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>first-spring-boot-application<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">packaging</span>&gt;</span>jar<span class="tag">&lt;/<span class="name">packaging</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.0-SNAPSHOT<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">name</span>&gt;</span>first-spring-boot-application<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">  </span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-web<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.2.6.RELEASE<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>junit<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>junit<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.8.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">scope</span>&gt;</span>test<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">project</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>将App.java的内容修改为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.evan;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.*;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.autoconfigure.*;</span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.annotation.*;</span><br><span class="line"></span><br><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="meta">@EnableAutoConfiguration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">App</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RequestMapping(&quot;/&quot;)</span></span><br><span class="line">    <span class="function">String <span class="title">home</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Hello World!&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(App.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>按照官方文档中运行spring boot工程的命令：<strong>mvn spring-boot:run</strong></p>
+<p>Build会失败，提示找不到spring-boot插件，因为目前还没有像官方样例那样引入父POM</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">parent</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-parent<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.2.6.RELEASE<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">parent</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>spring-boot插件就声明在这个父POM中。引入之后，通过spring-boot插件就可以运行spring boot工程。</p>
+<p>spring-boot-starter-parent这个父POM有以下特性：</p>
+<ul>
+<li>使用Java 1.8作为默认编译级别</li>
+<li>UTF-8源文件编码</li>
+<li>继承了spring-boot-dependencies pom进行依赖管理，使得用户可以不指定依赖的version</li>
+<li>可执行的Maven goal：<strong>repackage</strong></li>
+<li>合理的资源过滤（<a target="_blank" rel="noopener" href="https://maven.apache.org/plugins/maven-resources-plugin/examples/filter.html">resource filtering</a>）</li>
+<li>合理的插件配置(<a target="_blank" rel="noopener" href="https://www.mojohaus.org/exec-maven-plugin/">exec plugin</a>, <a target="_blank" rel="noopener" href="https://github.com/ktoso/maven-git-commit-id-plugin">Git commit ID</a>, and <a target="_blank" rel="noopener" href="https://maven.apache.org/plugins/maven-shade-plugin/">shade</a>)</li>
+<li>Sensible resource filtering for <code>application.properties</code> and <code>application.yml</code> including profile-specific files (for example, <code>application-dev.properties</code> and <code>application-dev.yml</code>)</li>
+</ul>
+<h2 id="创建Spring-Boot应用可执行JAR（Executable-JAR）"><a href="#创建Spring-Boot应用可执行JAR（Executable-JAR）" class="headerlink" title="创建Spring Boot应用可执行JAR（Executable JAR）"></a>创建Spring Boot应用可执行JAR（Executable JAR）</h2><p>可执行Jar也叫“fat jar”，是包含编译类以及代码运行所有需要的jar依赖的压缩文件。</p>
+<p>要创建一个可执行jar，需要将spring-boot-maven-plugin插件添加到pom.xml中。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>运行<strong>mvn package</strong>后，会在工程的target目录下生成first-spring-boot-application-1.0-SNAPSHOT.jar（16.7MB）。在target目录中，还包含有一个first-spring-boot-application-1.0-SNAPSHOT.jar.original文件（3KB）。</p>
+<p>执行<strong>java -jar .\target\first-spring-boot-application-1.0-SNAPSHOT.jar</strong>，工程会像使用<strong>mvn spring-boot:run</strong>一样，正常运行。</p>
+<h3 id="可执行JAR格式"><a href="#可执行JAR格式" class="headerlink" title="可执行JAR格式"></a>可执行JAR格式</h3><blockquote>
+<p>Executable jars and Java</p>
+<p>Java does not provide a standard way to load nested jar files (jar files that are themselves contained within a jar). This can be problematic if you are looking to distribute a self-contained application.</p>
+<p>To solve this problem, many developers use “uber” jars. An uber jar packages all the classes from all the application’s dependencies into a single archive. The problem with this approach is that it becomes hard to see which libraries are in your application. It can also be problematic if the same filename is used (but with different content) in multiple jars.</p>
+<p>Spring Boot takes a <a target="_blank" rel="noopener" href="https://docs.spring.io/spring-boot/docs/2.2.6.RELEASE/reference/html/appendix-executable-jar-format.html#executable-jar">different approach</a> and lets you actually nest jars directly.</p>
+</blockquote>
+<p>spring-boot-loader 模块让 Spring Boot 支持 jar 和 war 文件。</p>
+<h4 id="可执行JAR"><a href="#可执行JAR" class="headerlink" title="可执行JAR"></a>可执行JAR</h4><p>将first-spring-boot-application-1.0-SNAPSHOT.jar.original文件解压：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">first-spring-boot-application-1.0-SNAPSHOT.jar.original</span><br><span class="line"> |</span><br><span class="line"> +-META-INF</span><br><span class="line"> |  +-maven</span><br><span class="line"> |     +-com.evan</span><br><span class="line"> |        +-first-spring-boot-application</span><br><span class="line"> |           +-pom.properties</span><br><span class="line"> |           +-pom.xml</span><br><span class="line"> |  +-MANIFEST.MF</span><br><span class="line"> +-com</span><br><span class="line"> |  +-evan</span><br><span class="line"> |     +-App.class</span><br></pre></td></tr></table></figure>
+<p>该文件是Maven打包后未经Spring Boot repackage的原始jar文件，只包含了本地资源（如编译后的classes目录下的资源文件），未引入第三方依赖资源。</p>
+<p>将first-spring-boot-application-1.0-SNAPSHOT.jar文件解压，Spring Boot Loader兼容的jar文件目录结构如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">first-spring-boot-application-1.0-SNAPSHOT.jar</span><br><span class="line"> |</span><br><span class="line"> +-META-INF</span><br><span class="line"> |  +-maven</span><br><span class="line"> |     +-com.evan</span><br><span class="line"> |        +-first-spring-boot-application</span><br><span class="line"> |           +-pom.properties</span><br><span class="line"> |           +-pom.xml</span><br><span class="line"> |  +-MANIFEST.MF</span><br><span class="line"> +-org</span><br><span class="line"> |  +-springframework</span><br><span class="line"> |     +-boot</span><br><span class="line"> |        +-loader</span><br><span class="line"> |           +-&lt;spring boot loader classes&gt;</span><br><span class="line"> +-BOOT-INF</span><br><span class="line">    +-classes</span><br><span class="line">    |  +-com</span><br><span class="line">    |     +-evan</span><br><span class="line">    |        +-App.class</span><br><span class="line">    +-lib</span><br><span class="line">       +-dependency1.jar</span><br><span class="line">       +-dependency2.jar</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>BOOT-INF/classes</strong> 目录存放应用编译后的class文件</li>
+<li><strong>BOOT-INF/lib</strong> 目录存放应用依赖的JAR包</li>
+<li><strong>META-INF/</strong> 目录存放应用相关的元信息，如MANIFEST.MF文件</li>
+<li><strong>org/</strong> 目录存放Spring Boot相关的class文件</li>
+</ul>
+<p>相比较之下，可执行jar多了一个BOOT-INF目录，这个目录的结构模仿了JAVA EE Web应用的WEB-INF目录结构。</p>
+<p>org/目录下的文件并非项目中的文件，是由spring-boot-maven-plugin插件repackage进来的。</p>
+<h4 id="可执行WAR"><a href="#可执行WAR" class="headerlink" title="可执行WAR"></a>可执行WAR</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">example.war</span><br><span class="line"> |</span><br><span class="line"> +-META-INF</span><br><span class="line"> |  +-MANIFEST.MF</span><br><span class="line"> +-org</span><br><span class="line"> |  +-springframework</span><br><span class="line"> |     +-boot</span><br><span class="line"> |        +-loader</span><br><span class="line"> |           +-&lt;spring boot loader classes&gt;</span><br><span class="line"> +-WEB-INF</span><br><span class="line">    +-classes</span><br><span class="line">    |  +-com</span><br><span class="line">    |     +-mycompany</span><br><span class="line">    |        +-project</span><br><span class="line">    |           +-YourClasses.class</span><br><span class="line">    +-lib</span><br><span class="line">    |  +-dependency1.jar</span><br><span class="line">    |  +-dependency2.jar</span><br><span class="line">    +-lib-provided</span><br><span class="line">       +-servlet-api.jar</span><br><span class="line">       +-dependency3.jar</span><br></pre></td></tr></table></figure>
+<p>WEB-INF/lib目录存放依赖，WEB-INF/lib-provided目录存放使用内嵌容器时需要，部署到传统容器时不需要的依赖（即<scope>provided</scope>的jar文件）。</p>
+<h3 id="运行可执行JAR"><a href="#运行可执行JAR" class="headerlink" title="运行可执行JAR"></a>运行可执行JAR</h3><p>根据Java官方文档的规定，java -jar命令引导的具体启动类必须配置在MANIFEST.MF资源的Main-Class属性中。</p>
+<p>first-spring-boot-application-1.0-SNAPSHOT.jar解压出的MANIFEST.MF内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Manifest-Version: 1.0</span><br><span class="line">Implementation-Title: first-spring-boot-application</span><br><span class="line">Implementation-Version: 1.0-SNAPSHOT</span><br><span class="line">Start-Class: com.evan.App</span><br><span class="line">Spring-Boot-Classes: BOOT-INF&#x2F;classes&#x2F;</span><br><span class="line">Spring-Boot-Lib: BOOT-INF&#x2F;lib&#x2F;</span><br><span class="line">Build-Jdk-Spec: 1.8</span><br><span class="line">Spring-Boot-Version: 2.2.6.RELEASE</span><br><span class="line">Created-By: Maven Archiver 3.4.0</span><br><span class="line">Main-Class: org.springframework.boot.loader.JarLauncher</span><br></pre></td></tr></table></figure>
+<p>org.springframework.boot.loader.Launcher类是一个特殊的bootstrap类，它作为可执行jar的入口（entry point），用于设置适当的URLClassLoader并最终调用应用的main方法。它有三个子类JarLauncher、WarLauncher和PropertiesLauncher，均放在org/springframework/boot/loader/目录下。它们是用来从指定目录（而不是CLASSPATH）中寻找嵌套jar文件和war文件，然后加载其中的资源（.class文件等等）。JarLauncher和WarLauncher的寻找路径是固定的，JarLauncher寻找BOOT-INF/lib/目录，WarLauncher寻找WEB-INF/lib/目录。PropertiesLauncher默认从BOOT-INF/lib/目录寻找，可以通过设置环境变量LOADER_PATH或者loader.properties文件中的loader.path属性来添加额外的寻找路径。</p>
+<p>无需在MANIFEST.MF中指定Class-Path属性，classpath可以由嵌套jars推断出来。</p>
+<p>应用实际的启动类应该定义在MANIFEST.MF中的Start-Class属性，具体的Launcher读取此属性，获取启动类后读取main方法，反射调用。Launcher同进程调用启动类的main方法，并在启动前准备好Class Path。</p>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Java/"># Java</a>
+                    
+                        <a href="/tags/Spring/"># Spring</a>
+                    
+                        <a href="/tags/Spring-Boot/"># Spring Boot</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2021/01/17/hello-world/">Hello World</a>
+            
+            
+            <a class="next" rel="next" href="/2021/01/14/springboot/features/">Spring Boot特性</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>

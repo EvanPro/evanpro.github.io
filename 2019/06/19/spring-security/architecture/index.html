@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>Spring Security 概述 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Spring Security 概述</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">六月 19, 2019</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/Spring-Security/">Spring Security</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h2 id="认证和授权"><a href="#认证和授权" class="headerlink" title="认证和授权"></a>认证和授权</h2><p>应用安全性大致归结为两个独立的问题：认证（Authentication）和授权（Authorization）。认证相当于“你是谁”，授权相当于“你被允许做什么”。授权还有另外一个叫法，访问控制（Access Control）。Spring Security的架构设计将这两部分区分开来，并且两者都有自己的策略以及拓展点。</p>
+<a id="more"></a>
+<h3 id="认证"><a href="#认证" class="headerlink" title="认证"></a>认证</h3><p>认证主要的策略接口是<strong>AuthenticationManager</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">AuthenticationManager</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="function">Authentication <span class="title">authenticate</span><span class="params">(Authentication authentication)</span></span></span><br><span class="line"><span class="function">    <span class="keyword">throws</span> AuthenticationException</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>authenticate()**方法返回一个</strong>Authentication<strong>时代表认证通过，认证不通过时抛出 <em>AuthenticationException</em>，无法判定时返回null。<em>AuthenticationException</em> 是一个运行时异常。抛出异常时，一般前台页面会提示认证失败并且后端服务会返回401并且响应头中会有名为<em>WWW-Authenticate</em>的header。<br>**AuthenticationManager</strong>的默认实现是<strong>ProviderManager</strong>，它内部实现是委托一组<strong>AuthenticationProvider</strong>的实例完成authenticate方法逻辑。<strong>AuthenticationProvider</strong>接口类似于<strong>AuthenticationManager</strong>接口，它提供一个额外的support方法来表示自己支持哪种<strong>Authentication</strong>的认证。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">AuthenticationProvider</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function">Authentication <span class="title">authenticate</span><span class="params">(Authentication authentication)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> AuthenticationException</span>;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">supports</span><span class="params">(Class&lt;?&gt; authentication)</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><em>supports()<em>方法中的</em>Class&lt;?&gt;</em> 参数实际上是 <em>Class&lt;? extends Authentication&gt;<em>。</em></em>ProviderManager<strong>通过委托一组</strong>AuthenticationProvider<strong>实现在同一个应用中支持多种不同的认证机制。如果某一个</strong>Authentication<strong>无法被</strong>ProviderManager<strong>识别，那么这个</strong>Authentication<strong>将被跳过。<br>一个</strong>ProviderManager<strong>有一个可选的parent，当所有的providers返回null时，它可以咨询他的parent。如果没有配parent，当所有providers返回null时，</strong>ProviderManager<strong>会抛出<em>AuthenticationException</em>。<br>有时，一个应用中受保护资源具有逻辑组关系时（比如所有的web资源匹配/api/</strong> ），每个组都可以拥有他们各自的 <strong>AuthenticationManager</strong>。这些 <strong>ProviderManager</strong>拥有同一个parent，这个parent代表一些全局的资源，作为所有providers的fallback。</p>
+<img src="/2019/06/19/spring-security/architecture/authentication.png" class="">
+
+<h3 id="自定义Authentication-Managers"><a href="#自定义Authentication-Managers" class="headerlink" title="自定义Authentication Managers"></a>自定义Authentication Managers</h3><p>Spring Security 提供了一些configuration helpers以快速帮你配置一些常用的authentication manager功能。最常用的helper是<strong>AuthenticationManagerBuilder</strong>，它可以创建内存、JDBC或者LDAP userdetails，或者添加自定义的<strong>UserDetailsService</strong>。下面这个例子是配置一个global(parent) <strong>AuthenticationManager</strong>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationSecurity</span> <span class="keyword">extends</span> <span class="title">WebSecurityConfigurerAdapter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">   ... <span class="comment">// web stuff here</span></span><br><span class="line"></span><br><span class="line">  <span class="meta">@Autowired</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">initialize</span><span class="params">(AuthenticationManagerBuilder builder, DataSource dataSource)</span> </span>&#123;</span><br><span class="line">    builder.jdbcAuthentication().dataSource(dataSource).withUser(<span class="string">&quot;dave&quot;</span>)</span><br><span class="line">      .password(<span class="string">&quot;secret&quot;</span>).roles(<span class="string">&quot;USER&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意：<strong>AuthenticationManagerBuilder</strong>是被*@Autowired<em>到一个</em>@Bean*的方法中。这个<strong>AuthenticationManagerBuilder</strong>是配置global(parent)的<strong>AuthenticationManager</strong>。<br>相反：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationSecurity</span> <span class="keyword">extends</span> <span class="title">WebSecurityConfigurerAdapter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Autowired</span></span><br><span class="line">  DataSource dataSource;</span><br><span class="line"></span><br><span class="line">   ... <span class="comment">// web stuff here</span></span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">configure</span><span class="params">(AuthenticationManagerBuilder builder)</span> </span>&#123;</span><br><span class="line">    builder.jdbcAuthentication().dataSource(dataSource).withUser(<span class="string">&quot;dave&quot;</span>)</span><br><span class="line">      .password(<span class="string">&quot;secret&quot;</span>).roles(<span class="string">&quot;USER&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>重写Configurer的方法，此时的<strong>AuthenticationManagerBuilder</strong>配置的是local的<strong>AuthenticationManager</strong>，它是global<strong>AuthenticationManager</strong>的子级。在Spring Boot 应用中，可以 <em>@Autowired</em> global的<strong>AuthenticationManager</strong>到某个bean中，但是local的<strong>AuthenticationManager</strong>不可以这样做。通常情况下，只需要配置local<strong>AuthenticationManager</strong>就可以。</p>
+<h3 id="授权（Access-Control）"><a href="#授权（Access-Control）" class="headerlink" title="授权（Access Control）"></a>授权（Access Control）</h3><p>授权的核心策略接口是<strong>AccessDecisionManager</strong>。框架提供了三种实现，并且它们都委托一组<strong>AccessDecisionVoter</strong>，就像<strong>ProviderManager</strong>委托<strong>AuthenticationProviders</strong>一样。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">AccessDecisionVoter</span>&lt;<span class="title">S</span>&gt; </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">supports</span><span class="params">(ConfigAttribute attribute)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">supports</span><span class="params">(Class&lt;?&gt; clazz)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">int</span> <span class="title">vote</span><span class="params">(Authentication authentication, S object,</span></span></span><br><span class="line"><span class="function"><span class="params">        Collection&lt;ConfigAttribute&gt; attributes)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Authentication代表一个用户凭证（同时也是授权逻辑的调用者），object是被保护的对象（用户想要访问的资源，可以是一个web资源也可以是一个java方法），attributes是与object相关联的配置属性（例如，角色名）。</p>
+<h3 id="Web-安全性"><a href="#Web-安全性" class="headerlink" title="Web 安全性"></a>Web 安全性</h3><p>Spring Security在web层（UI和接口层）是基于Servlet Filters。Spring Security仅仅是Filter链中的一个Filter，具体的类型是<strong>FilterChainProxy</strong>。在Spring Boot应用中，security filter是上下文中的一个@Bean，SecurityProperties.DEFAULT_FILTER_ORDER是它的默认顺序。在web容器的角度看，Spring Security是一个单独的Filter。但是从内部看，它包含很多不同角色的Filter。</p>
+<img src="/2019/06/19/spring-security/architecture/security-filters.png" class="">
+<p>事实上，security filter和filter chain中还会有一个中间层，通常是<strong>DelegatingFilterProxy</strong>，它可以不是上下文中的一个bean。<strong>DelegatingFilterProxy</strong>委托<strong>FilterChainProxy</strong>（上下文中的一个bean，有固定的名字：springSecurityFilterChain），<strong>FilterChainProxy</strong>包含所有spring security filter。所有的spring security filter都实现servlet规范中的filter接口。一个<strong>FilterChainProxy</strong>可以包含多个filter chain，他们被spring security管理，web容器无法感知他们的存在。</p>
+<img src="/2019/06/19/spring-security/architecture/security-filters-dispatch.png" class="">
+
+<h3 id="创建和自定义Filter-Chains"><a href="#创建和自定义Filter-Chains" class="headerlink" title="创建和自定义Filter Chains"></a>创建和自定义Filter Chains</h3><p>Spring Boot应用中默认的fallback filter chain 匹配url /** ，可以通过security.basic.enabled=false关闭它，或者可以把它作为一个fallback，用更低的order定义自己的规则（添加一组filter chain）：添加一个类型为  <strong>WebSecurityConfigurerAdapter</strong> (或者 <strong>WebSecurityConfigurer</strong>）的@Bean，并在类上注明order。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@Order(SecurityProperties.BASIC_AUTH_ORDER - 10)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationConfigurerAdapter</span> <span class="keyword">extends</span> <span class="title">WebSecurityConfigurerAdapter</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">configure</span><span class="params">(HttpSecurity http)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    http.antMatcher(<span class="string">&quot;/foo/**&quot;</span>)</span><br><span class="line">     ...;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="分发和授权的请求匹配"><a href="#分发和授权的请求匹配" class="headerlink" title="分发和授权的请求匹配"></a>分发和授权的请求匹配</h3><p>一个security filter chain（或者说WebSecurityConfigurerAdapter）有一个request matcher用来决定是否匹配某个HTTP请求，一旦匹配，其他的security filter chain不会再匹配这个HTTP请求。但是在一个filter chain内部，可以通过向<strong>HttpSecurity</strong>添加额外的matchers实现更细粒度的授权控制。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@Order(SecurityProperties.BASIC_AUTH_ORDER - 10)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationConfigurerAdapter</span> <span class="keyword">extends</span> <span class="title">WebSecurityConfigurerAdapter</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">configure</span><span class="params">(HttpSecurity http)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    http.antMatcher(<span class="string">&quot;/foo/**&quot;</span>)</span><br><span class="line">      .authorizeRequests()</span><br><span class="line">        .antMatchers(<span class="string">&quot;/foo/bar&quot;</span>).hasRole(<span class="string">&quot;BAR&quot;</span>)</span><br><span class="line">        .antMatchers(<span class="string">&quot;/foo/spam&quot;</span>).hasRole(<span class="string">&quot;SPAM&quot;</span>)</span><br><span class="line">        .anyRequest().isAuthenticated();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意：方法中第一行和第三、四行方法名是不同的。第一行是整个filter chain的request matcher。</p>
+<h3 id="方法安全"><a href="#方法安全" class="headerlink" title="方法安全"></a>方法安全</h3><p>Spring Security同样可以保护Java方法的调用。通过如下方法开启：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="meta">@EnableGlobalMethodSecurity(securedEnabled = true)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SampleSecureApplication</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后可以直接在要被保护的方法上添加注释：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Secured(&quot;ROLE_USER&quot;)</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">secure</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;Hello Security&quot;</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="线程相关"><a href="#线程相关" class="headerlink" title="线程相关"></a>线程相关</h3><p>Spring Security是与线程绑定的。想要在代码中手动获取Authentication可以通过以下方式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SecurityContext context = SecurityContextHolder.getContext();</span><br><span class="line">Authentication authentication = context.getAuthentication();</span><br><span class="line"><span class="keyword">assert</span>(authentication.isAuthenticated);</span><br></pre></td></tr></table></figure>
+<p>controller层：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequestMapping(&quot;/foo&quot;)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">foo</span><span class="params">(<span class="meta">@AuthenticationPrincipal</span> User user)</span> </span>&#123;</span><br><span class="line">  ... <span class="comment">// do stuff with user</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="异步处理Secure-Methods"><a href="#异步处理Secure-Methods" class="headerlink" title="异步处理Secure Methods"></a>异步处理Secure Methods</h3><p>因为<strong>SecurityContext</strong>是线程绑定的，所以任何对Secure Methods异步的调用，需要主要上文的传递。这就需要将<strong>SecurityContext</strong>包装进任务中（Runnable, Callable等等）。Spring Security提供了一些helpers。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationConfiguration</span> <span class="keyword">extends</span> <span class="title">AsyncConfigurerSupport</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Executor <span class="title">getAsyncExecutor</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> DelegatingSecurityContextExecutorService(Executors.newFixedThreadPool(<span class="number">5</span>));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote><footer><strong>参考</strong><cite><a target="_blank" rel="noopener" href="https://spring.io/guides/topicals/spring-security-architecture">Spring Security Architecture</a></cite></footer></blockquote>
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Java/"># Java</a>
+                    
+                        <a href="/tags/Spring-Security/"># Spring Security</a>
+                    
+                        <a href="/tags/Spring/"># Spring</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2021/01/14/springboot/features/">Spring Boot特性</a>
+            
+            
+            <a class="next" rel="next" href="/2018/05/01/JCIP/1/">结构化并发应用程序</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>
