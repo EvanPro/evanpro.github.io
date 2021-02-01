@@ -14,7 +14,7 @@
 
 
 
-<title>协议栈 | Evan&#39;s Blog</title>
+<title>TCP协议 | Evan&#39;s Blog</title>
 
 
 
@@ -179,14 +179,14 @@
     
     <article class="post-wrap">
         <header class="post-header">
-            <h1 class="post-title">协议栈</h1>
+            <h1 class="post-title">TCP协议</h1>
             
                 <div class="post-meta">
                     
 
                     
                         <span class="post-time">
-                        发表于: <a href="#">一月 19, 2021</a>
+                        发表于: <a href="#">一月 31, 2021</a>
                         </span>
                     
                     
@@ -202,31 +202,36 @@
         </header>
 
         <div class="post-content">
-            <p>网络软件的数据收发是通过委托给操作系统的网络控制软件（协议栈）以及硬件网卡来实现的。<br>协议栈是一组网络协议的具体实现，OSI七层模型和TCP/IP五层模型的对比如下：</p>
-<img src="/2021/01/19/network/protocal-stack/protocol_stack.png" class="">
+            <p>先上定义，TCP是一种<strong>面向连接的</strong>、<strong>可靠的</strong>、<strong>基于字符流</strong>的传输层通信协议。<br>TCP属于传输层协议，传输层协议与网络层协议之间的主要区别是，网络层协议是为主机之间提供逻辑通信的，而传输层协议是为应用<strong>进程</strong>之间提供<strong>端到端</strong>的逻辑通信的。<br>这里的端到端指的就是套接字(Socket)。  </p>
+<p>TCP的全部功能都体现在它首部中各字段的作用。</p>
+<img src="/2021/01/31/network/tcp/tcp_header.png" class="">
+<p>具体这些字段的作用，在接下来的各个小节进行解释。</p>
+<h1 id="可靠传输"><a href="#可靠传输" class="headerlink" title="可靠传输"></a>可靠传输</h1><p>理想的传输条件有以下两个特点：</p>
+<ol>
+<li>传输信道不产生差错</li>
+<li>不管发送方以多块的速度发送数据，接收方总是来得及处理收到的数据。</li>
+</ol>
+<p>实际的网络不具备这两个条件，可以采取一些措施解决这两个问题。</p>
+<h2 id="停止等待协议"><a href="#停止等待协议" class="headerlink" title="停止等待协议"></a>停止等待协议</h2><p>解决丢包问题的最简单方式是停止等待协议：发送方每次发送完一个数据包后等待接收方的确认，然后才发送下一个数据包。<br>为了标识发送数据包和对应的确认，也就引出了TCP首部的两个标志位：<strong>序号（Sequence Num）</strong>和<strong>确认号（Acknowledgment Number）</strong>。</p>
+<blockquote>
+<p>序号：<br>32位，4字节。序号范围是[0, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>32</mn></msup><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">2^{32} -1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.897438em;vertical-align:-0.08333em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span><span class="mord mtight">2</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">1</span></span></span></span>] TCP传输的每一个字节都按照顺序编号。整个要传输的字节流的起始编号（一般不为0）必须在<strong>连接建立时设置</strong>。首部中的需要字段指的是<strong>本报文段</strong>所发送的数据的第一个字节的序号。</p>
+</blockquote>
+<blockquote>
+<p>确认号：<br>32位，4字节。是<strong>期望收到对方下一个报文段的第一个数据字节的序号，即下一个报文段的序号标志位</strong>。若确认号=N，则表明：到序号N-1为止的所有数据（字节）都正确收到。</p>
+</blockquote>
+<p>无差错时是下面这个样子：</p>
+<img src="/2021/01/31/network/tcp/stopwait.gif" class="" title="图片来源公众号：低并发编程">
 
-<h2 id="套接字"><a href="#套接字" class="headerlink" title="套接字"></a>套接字</h2><p>在协议栈内部有一块用于存放控制信息的内存空间，这里记录了用于控制通信操作的控制信息，例如通信对象的IP地址、端口号、通信操作的进行状态等。本来套接字就只是一个概念而已，并不存在实体，如果一定要赋予它一个实体，我们可以说这些控制信息就是套接字的实体，或者说存放控制信息的内存空间就是套接字的实体。<strong>协议栈是根据套接字中记录的信息来工作的。</strong></p>
-<h2 id="协议栈TCP通信过程"><a href="#协议栈TCP通信过程" class="headerlink" title="协议栈TCP通信过程"></a>协议栈TCP通信过程</h2><ol>
-<li>创建套接字：分配一个套接字所需的内存空间，向其写入初始状态，将表示这个套接字的<strong>描述符</strong>告知应用程序。</li>
-<li>连接</li>
-<li>收发数据</li>
-<li>断开：套接字会被删除</li>
-</ol>
-<h3 id="连接阶段"><a href="#连接阶段" class="headerlink" title="连接阶段"></a>连接阶段</h3><p>连接实际上是通信双方交换控制信息，在套接字中记录这些必要信息并准备数据收发的一连串操作。此外，当执行数据收发操作时，我们还需要一块用来临时存放要手法的数据的内存空间，这块内存称为缓冲区，它也是在连接操作的过程中分配的。连接阶段也可以叫做准备阶段。</p>
-<p>这个过程是从应用程序调用Socket库的connect方法开始的，需要指定<strong>描述符</strong>、<strong>服务器IP地址</strong>和<strong>端口号</strong>这三个参数。<br>其实就是TCP三次握手的过程。</p>
-<h4 id="负责保存信息的头部"><a href="#负责保存信息的头部" class="headerlink" title="负责保存信息的头部"></a>负责保存信息的头部</h4><p>通信操作中使用的控制信息分为两类：</p>
+<p>出现差错时是有以下几种情况：</p>
 <ol>
-<li>头部中记录的信息</li>
-<li>套接字（协议栈中的内存空间）中记录的信息</li>
+<li>发送方的问题：接收方接收到数据包后发现数据包有错误或者发送方发送的数据包确实丢失了，总之就是发送方没有接收到接收方响应的确认。解决这种情况的方法是发送方每发送完一个数据包就设置一个超时计时器，如果直到超时都没有收到确认，就重传数据包。</li>
+<li>接收方的问题：接收方的确认丢失了。那么当接收方再次收到发送方重传的数据包时，直接丢弃，并且<strong>再次发送确认</strong>。</li>
+<li>网络的问题：接收方的确认迟到了，那么无论是接收方还是发送方，收到重复发送的数据包和确认时，都直接丢弃就可以了。</li>
 </ol>
-<p>TCP头部包含收发方端口号、控制位、窗口等字段，而套接字的控制信息和协议栈的程序本身其实是一体的，因此，“协议栈具体需要哪些信息”会根据协议栈本身的实现方式不同而不同，协议栈中的控制信息通信对方是看不见的，只要在通信时按照规则将必要的信息写入头部、客户端和服务器之间的通信就得以成立。因此不同的操作系统直接可以通信。</p>
-<h3 id="收发数据"><a href="#收发数据" class="headerlink" title="收发数据"></a>收发数据</h3><p>当控制流程从connect回到应用程序之后，接下来就进入了数据收发阶段了。应用程序调用write将要发送的数据交给协议栈，应用程序在调用write时会指定收发数据的长度。协议栈并不是一收到数据就马上发送出去，而是会将数据存放在内部的<strong>发送缓冲区</strong>中，并等待应用程序的下一段数据。这样做时有意义的，应用程序交给协议栈的数据长度是由应用程序自己决定的，有的一次传递所有数据，有的逐字节或者逐行传递，协议栈无法控制这些行为。如果协议栈一收到数据就马上发送出去可能会发送大量的小包，造成网络效率低下，因此需要积累一定量的数据再发送。至于积累多少再发送，不同的操作系统实现也不一致。一般都会根据几个要素判断：</p>
-<ol>
-<li>每个网络包能容纳的数据长度：当应用程序收到的数据长度超过或者接近MSS（最大分段大小）时再发送，可以避免大量小包的问题。</li>
-<li>事件：当应用程序发送数据的频率不高的时候，如果每次都等到长度接近MSS时再发送，可能会因为等待时间太长而造成延迟。协议栈内部有一个计时器，当经过一定时间之后，就会把网络包发出去。</li>
-</ol>
-<p>这两个要素时互相矛盾的，因此怎样才能达到平衡是由协议栈开发者来决定的。同时，如果仅靠协议栈来判断发送时机可能会带来一些问题，因此协议栈也给应用程序保留了控制发送时机的余地，提供了一些控制选项。</p>
-<p>//todo: TCP 慢启动、可靠传输</p>
+<h2 id="连续ARQ协议"><a href="#连续ARQ协议" class="headerlink" title="连续ARQ协议"></a>连续ARQ协议</h2><p>停止等待协议简单是简单，但是效率太低，信道利用率太差。<br>连续ARQ协议维护一个窗口，窗口中的数据包可以按顺序连续发送出去，无需等待对方确认，这样效率就上来了。</p>
+<img src="/2021/01/31/network/tcp/arq.png" class="">
+<p>发送方每收到一个确认，就把发送窗口向前滑动一个数据包。接收方一般采用<strong>累积确认</strong>的方式。这就是说接收方不需要对收到的数据包逐个确认，而是在收到几个数据包后，<strong>对按序到达的最后一个数据包发送确认</strong>，表示到这个数据包为止的所有数据包都已正确收到。<br>很明显，使用ARQ协议后，接收方即使发送的确认丢失了也不用重传，因为之后的数据包到达，接收方向发送方反馈相应的确认，发送方在超时之前接收到了这个确认，那么就代表之前的数据包已经正确接收。<br>但是这也无法向发送方反映已经正确的收到数据包信息，例如：发送方发送了5个数据包，其中第3个数据包丢失了。这时接收方只能对前两个数据包进行确认，最后两个数据包即使到了也无法进行确认，那么最终发送方需要把后3个数据包进行重传。在网路不好的时候，影响很大。</p>
+<h1 id="面向连接"><a href="#面向连接" class="headerlink" title="面向连接"></a>面向连接</h1><p>我们知道，与同为传输层协议的UDP相比，TCP的最大区别就是TCP是面向连接的。这是指，应用程序使用TCP协议之前，必须先建立TCP连接，在传输完毕后，必须释放已经创建的TCP连接。</p>
 
         </div>
 
@@ -250,10 +255,8 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2021/01/31/network/tcp/">TCP协议</a>
             
-            
-            <a class="next" rel="next" href="/2021/01/14/springboot/application-architecture/">Spring Boot应用结构</a>
+            <a class="next" rel="next" href="/2021/01/19/network/protocal-stack/">协议栈</a>
             
         </section>
 
