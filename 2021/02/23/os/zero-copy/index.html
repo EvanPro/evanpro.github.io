@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>Linux零拷贝技术 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Linux零拷贝技术</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">二月 23, 2021</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="标准I-O"><a href="#标准I-O" class="headerlink" title="标准I/O"></a>标准I/O</h1><p>传统的Linux操作系统的标准I/O接口是基于数据拷贝操作的，标准I/O又被称为<strong>缓存I/O(Buffered I/O)</strong> 。操作系统会将I/O的数据缓存在文件系统的<strong>页缓存</strong>（page cache）中。当应用程序尝试读取某块数据的时候，如果这块数据已经存放在了页缓存中，那么这块数据就可以立即返回给应用程序，而不需要经过实际的物理读盘操作。对于写操作来说，应用程序也会将数据先写到页缓存中去，数据是否被立即写到磁盘上去取决于应用程序所采用的写操作机制。<br>一般来说，在传输数据的时候，用户应用程序需要分配一块<strong>大小合适的缓冲区</strong>用来存放需要传输的数据。应用程序从文件中读取一块数据，然后把这块数据通过网络发送到接收端去。用户应用程序只是需要调用两个系统调用 <em>read()</em> 和 <em>write()</em> 就可以完成这个数据传输操作，应用程序并不知晓在这个数据传输的过程中操作系统所做的数据拷贝操作。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">while((n &#x3D; read(diskfd, buf, BUF_SIZE)) &gt; 0)</span><br><span class="line">    write(sockfd, buf , n);</span><br></pre></td></tr></table></figure>
+<p>实际上，操作系统内核会先检查这块数据是不是因为前一次对相同文件的访问而已经被存放在操作系统内核地址空间的缓冲区内，如果在内核缓冲区中找不到这块数据：</p>
+<ol>
+<li>Linux 操作系统内核会先将这块数据从磁盘读出来放到操作系统内核的缓冲区（也就是页缓存）里去。这一步目前主要依靠DMA来传输。</li>
+<li>Linux 操作系统会根据 read() 系统调用指定的应用程序地址空间的地址，把这块数据存放到请求这块数据的应用程序的地址空间中去。</li>
+<li>执行write()系统操作时，操作系统需要将数据再一次从用户应用程序地址空间的缓冲区拷贝到与网络协议栈相关的内核缓冲区中去。</li>
+<li>最后socket再把内核缓冲区的内容发送到网卡上。<img src="/2021/02/23/os/zero-copy/bufferedio.webp" class=""> 
+从上图中可以看出，共产生了四次数据拷贝，即使使用了DMA来处理了与硬件的通讯，CPU仍然需要处理两次数据拷贝，与此同时，在用户态与内核态也发生了多次上下文切换，无疑也加重了CPU负担。  </li>
+</ol>
+<h1 id="零拷贝"><a href="#零拷贝" class="headerlink" title="零拷贝"></a>零拷贝</h1><p>简单一点来说，零拷贝就是一种避免<strong>CPU</strong>将数据从一块存储拷贝到另外一块存储的技术。</p>
+<h2 id="零拷贝技术分类"><a href="#零拷贝技术分类" class="headerlink" title="零拷贝技术分类"></a>零拷贝技术分类</h2><p>零拷贝技术的发展很多样化，现有的零拷贝技术种类也非常多，而当前并没有一个适合于所有场景的零拷贝技术的出现。概括起来，Linux 中的零拷贝技术主要有下面这几种：  </p>
+<ul>
+<li>直接 I/O：对于这种数据传输方式来说，应用程序可以直接访问硬件存储，操作系统内核只是辅助数据传输。</li>
+<li>在数据传输的过程中，避免数据在操作系统内核地址空间的缓冲区和用户应用程序地址空间的缓冲区之间进行拷贝。Linux 中提供类似的系统调用主要有 mmap()，sendfile() 以及 splice()。</li>
+<li>对数据在 Linux 的页缓存和用户进程的缓冲区之间的传输过程进行优化。该零拷贝技术侧重于灵活地处理数据在用户进程的缓冲区和操作系统的页缓存之间的拷贝操作。这种方法延续了传统的通信方式，但是更加灵活。在Linux中，该方法主要利用了写时复制（copy on write）技术。</li>
+</ul>
+<p>前两类方法的目的主要是为了避免应用程序地址空间和操作系统内核地址空间这两者之间的缓冲区拷贝操作。这两类零拷贝技术通常适用在某些特殊的情况下，比如要传送的数据不需要经过操作系统内核的处理或者不需要经过应用程序的处理。第三类方法则继承了传统的应用程序地址空间和操作系统内核地址空间之间数据传输的概念，进而针对数据传输本身进行优化。</p>
+<h3 id="直接-I-O"><a href="#直接-I-O" class="headerlink" title="直接 I/O"></a>直接 I/O</h3><p>对于某些应用程序来说，它会有它自己的数据缓存机制,这类应用程序完全不需要使用操作系统内核中的缓冲区，这类应用程序就被称作是自缓存应用程序（ self-caching applications ）。数据库就是这类应用的典型。数据库往往比操作系统更了解数据库中存放的数据，他们更倾向于选择他们自己的缓存机制。通过直接I/O方式进行数据传输，数据均直接在用户地址空间的缓冲区和磁盘之间直接进行传输，完全不需要页缓存的支持。</p>
+<h3 id="避免内核地址空间的缓冲区和用户应用程序地址空间的缓冲区之间的拷贝"><a href="#避免内核地址空间的缓冲区和用户应用程序地址空间的缓冲区之间的拷贝" class="headerlink" title="避免内核地址空间的缓冲区和用户应用程序地址空间的缓冲区之间的拷贝"></a>避免内核地址空间的缓冲区和用户应用程序地址空间的缓冲区之间的拷贝</h3><h4 id="mmap"><a href="#mmap" class="headerlink" title="mmap()"></a>mmap()</h4><p>使用mmap()系统调用替换read()系统调用，数据会先通过 DMA 拷贝到操作系统内核的缓冲区中去。接着，应用程序跟操作系统共享这个缓冲区，这样，操作系统内核和应用程序存储空间就不需要再进行任何的数据拷贝操作。</p>
+<img src="/2021/02/23/os/zero-copy/mmap.webp" class=""> 
+<h4 id="sendfile"><a href="#sendfile" class="headerlink" title="sendfile()"></a>sendfile()</h4><p>sendfile()不仅减少了数据拷贝操作，它也减少了上下文切换。首先：sendfile() 系统调用利用 DMA 引擎将文件中的数据拷贝到操作系统内核缓冲区中，然后数据被拷贝到与 socket 相关的内核缓冲区中去。接下来，DMA 引擎将数据从内核 socket 缓冲区中拷贝到协议引擎中去。<br>系统调用sendfile()在代表输入文件的描述符in_fd和代表输出文件的描述符out_fd之间传送文件内容（字节）。描述符out_fd必须指向一个套接字，而in_fd指向的文件必须是可以mmap的。这些局限限制了sendfile的使用，使sendfile只能将数据从文件传递到套接字上，反之则不行。</p>
+<img src="/2021/02/23/os/zero-copy/sendfile.webp" class=""> 
+<h4 id="带有DMA收集拷贝功能的sendfile"><a href="#带有DMA收集拷贝功能的sendfile" class="headerlink" title="带有DMA收集拷贝功能的sendfile()"></a>带有DMA收集拷贝功能的sendfile()</h4><p>sendfile() 技术在进行数据传输仍然还需要一次多余的数据拷贝操作，通过引入一点硬件上的帮助，这仅有的一次数据拷贝操作也可以避免。</p>
+<img src="/2021/02/23/os/zero-copy/DMAsendfile.webp" class=""> 
+<h4 id="splice"><a href="#splice" class="headerlink" title="splice()"></a>splice()</h4><p>sendfile只适用于将数据从文件拷贝到套接字上，限定了它的使用范围。与 sendfile() 不同的是，splice() 允许任意两个文件之间互相连接,也就是说，sendfile() 只是 splice() 的一个子集。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/linux/l-cn-zerocopy1/index.html">Linux 中的零拷贝技术，第 1 部分</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/linux/l-cn-zerocopy2/index.html">Linux 中的零拷贝技术，第 2 部分</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/linux/l-cn-directio/">Linux 中直接 I/O 机制的介绍</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/fad3339e3448">浅析Linux中的零拷贝技术</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/66595734">Linux 中的零拷贝技术</a></li>
+</ul>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E9%9B%B6%E6%8B%B7%E8%B4%9D/"># 零拷贝</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2021/01/31/network/tcp/">TCP协议</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>
