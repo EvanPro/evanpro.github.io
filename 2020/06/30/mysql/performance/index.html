@@ -14,7 +14,7 @@
 
 
 
-<title>Spring Boot特性 | Evan&#39;s Blog</title>
+<title>影响MySQL性能的因素 | Evan&#39;s Blog</title>
 
 
 
@@ -113,25 +113,87 @@
             <div class="container">
     
     
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
 
     
     <article class="post-wrap">
         <header class="post-header">
-            <h1 class="post-title">Spring Boot特性</h1>
+            <h1 class="post-title">影响MySQL性能的因素</h1>
             
                 <div class="post-meta">
                     
 
                     
                         <span class="post-time">
-                        发表于: <a href="#">一月 14, 2021</a>
+                        发表于: <a href="#">六月 30, 2020</a>
                         </span>
                     
                     
                         <span class="post-category">
                     分类于:
                             
-                                <a href="/categories/Spring-Boot/">Spring Boot</a>
+                                <a href="/categories/MySQL/">MySQL</a>
                             
                         </span>
                     
@@ -140,25 +202,18 @@
         </header>
 
         <div class="post-content">
-            <p>Spring Boot有六大特性：</p>
-<ul>
-<li>Create stand-alone Spring applications</li>
-<li>Embed Tomcat, Jetty or Undertow directly (no need to deploy WAR files)</li>
-<li>Provide opinionated ‘starter’ dependencies to simplify your build configuration</li>
-<li>Automatically configure Spring and 3rd party libraries whenever possible</li>
-<li>Provide production-ready features such as metrics, health checks, and externalized configuration</li>
-<li>Absolutely no code generation and no requirement for XML configuration</li>
+            <ol>
+<li>超高的QPS\TPS<br>MySQL无法使用多核CPU并行计算，每一个SQL只能用到一个CPU。假如一个服务器上只有1个CPU，处理一个SQL需要10ms，那么1S能处理100个sql，那么MySQL的QPS&lt;=100。</li>
+<li>大量的并发和超高的CPU使用率<br>数据库连接（max_connections，默认100）被占满（连接数不等于并发量，连接数往往大得多，其中一部分连接处于sleep状态）。</li>
+<li>磁盘IO</li>
+<li>网卡流量</li>
+</ol>
+<p>常见优化方式：减少从服务器数量、进行分级缓存、避免使用select *</p>
+<h2 id="大表"><a href="#大表" class="headerlink" title="大表"></a>大表</h2><ul>
+<li>记录行超多，单表超过千万行</li>
+<li>表数据文件巨大，表数据文件超过10G</li>
 </ul>
-<p>逐一翻译：</p>
-<ul>
-<li>创建独立的Spring应用</li>
-<li>直接嵌入Tomcat、Jetty或Undertow等Web容器（不需要部署WAR文件）</li>
-<li>提供固化的“starter”依赖，简化构建配置</li>
-<li>当条件满足时自动地装配Spring或第三方类库</li>
-<li>提供运维（production-ready）特性，如指标信息（metrics）、健康检查及外部化配置</li>
-<li>绝无代码生成，并且不需要XML配置</li>
-</ul>
-<p>Spring Framework是Spring Boot的“基础设施”，Spring Boot的基本特性均来自Spring Framework。Spring Boot又作为Spring Cloud的基础设施，让实现Cloud Native成为可能。</p>
+<p>处理方式：分库分表、历史数据归档</p>
 
         </div>
 
@@ -169,11 +224,7 @@
                 <span class="tag">
                     
                     
-                        <a href="/tags/Java/"># Java</a>
-                    
-                        <a href="/tags/Spring/"># Spring</a>
-                    
-                        <a href="/tags/Spring-Boot/"># Spring Boot</a>
+                        <a href="/tags/MySQL/"># MySQL</a>
                     
                         
                 </span>
@@ -186,10 +237,10 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2021/01/14/springboot/application-architecture/">Spring Boot应用结构</a>
+                <a class="prev" rel="prev" href="/2020/07/01/mysql/transaction/">MySQL数据库事务</a>
             
             
-            <a class="next" rel="next" href="/2020/07/01/mysql/transaction/">MySQL数据库事务</a>
+            <a class="next" rel="next" href="/2019/06/19/spring-security/architecture/">Spring Security 概述</a>
             
         </section>
 

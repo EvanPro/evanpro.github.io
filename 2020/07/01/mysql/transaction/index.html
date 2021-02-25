@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>MySQL数据库事务 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">MySQL数据库事务</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">七月 1, 2020</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/MySQL/">MySQL</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>事务存在的意义就是保证系统中的数据是正确的，不同数据间不会产生矛盾，也就是保证数据状态的一致性。<strong>事务是区别文件系统和数据库系统的主要因素</strong>。</p>
+<p>提到数据库的事务，必然是耳熟能详的ACID。但是ACID这四种特性并不正交，A、I、D 是手段，C（一致性）是目的。</p>
+<ul>
+<li>原子性（Atomic）：在同一项业务处理过程中，事务保证了多个对数据的修改，要么同时成功，要么一起被撤销。</li>
+<li>隔离性（Isolation）：在不同的业务处理过程中，事务保证了各自业务正在读、写的数据互相独立，不会彼此影响。</li>
+<li>持久性（Durability）：事务应当保证所有被成功提交的数据修改都能够正确地被持久化，不丢失数据。</li>
+</ul>
+<h1 id="原子性和持久性"><a href="#原子性和持久性" class="headerlink" title="原子性和持久性"></a>原子性和持久性</h1><p>原子性和持久性在事务里是密切相关的两个属性，原子性保证了事务的多个操作要么都生效要么都不生效，不会存在中间状态；持久性保证了一旦事务生效，就不会再因为任何原因而导致其修改的内容被撤销或丢失。<br>实现原子性和持久性所面临的困难是，<strong>“写入磁盘”这个操作不会是原子的</strong>，不仅有“写入”与“未写入”，还客观地存在着<strong>“正在写”</strong>的中间状态。<br>一般都是通过写入日志来保证原子性和持久性，具体内容会在之后的文章里写。</p>
+<h1 id="隔离性"><a href="#隔离性" class="headerlink" title="隔离性"></a>隔离性</h1><p>理论上来说为了保证隔离性，在某个事务对某个数据进行访问时，其他事务应该排队，当该事务提交后，其他事务才能继续访问这个数据。但是，这样做毫无性能可言，所以需要设置一些隔离级别以达到隔离性和性能之间的平衡。</p>
+<h2 id="事务并发执行可能遇到的问题"><a href="#事务并发执行可能遇到的问题" class="headerlink" title="事务并发执行可能遇到的问题"></a>事务并发执行可能遇到的问题</h2><h3 id="脏写（Dirty-Write）"><a href="#脏写（Dirty-Write）" class="headerlink" title="脏写（Dirty Write）"></a>脏写（Dirty Write）</h3><p>如果一个事务修改了另一个未提交事务修改过的数据，那就意味着发生了脏写。</p>
+<h3 id="脏读（Dirty-Read）"><a href="#脏读（Dirty-Read）" class="headerlink" title="脏读（Dirty Read）"></a>脏读（Dirty Read）</h3><p>如果一个事务读到了另一个未提交事务修改过的数据，那就意味着发生了脏读。</p>
+<h3 id="不可重复读（Non-Repeatable-Read）"><a href="#不可重复读（Non-Repeatable-Read）" class="headerlink" title="不可重复读（Non-Repeatable Read）"></a>不可重复读（Non-Repeatable Read）</h3><p>如果一个事务只能读到另一个已经提交的事务修改过的数据，并且其他事务每对该数据进行一次修改并提交后，该事务都能查询得到最新值，那就意味着发生了不可重复读。</p>
+<h3 id="幻读（Phantom）"><a href="#幻读（Phantom）" class="headerlink" title="幻读（Phantom）"></a>幻读（Phantom）</h3><p>如果一个事务先根据某些条件查询出一些记录，之后另一个事务又向表中插入了符合这些条件的记录并提交，原先的事务再次按照该条件查询时，能把另一个事务插入的记录也读出来，那就意味着发生了幻读。幻读强调的是一个事务按照某个相同条件多次读取记录时，后读取时读到了之前没有读到的记录。</p>
+<p>不可重复读的重点是<strong>修改</strong>:同样的条件, 你读取过的数据, 再次读取出来发现值不一样了。幻读的重点在于<strong>新增或者删除</strong>同样的条件, 第1次和第2次读出来的记录数不一样。<br>当然, 从总的结果来看, 似乎两者都表现为两次读取的结果不一致。但如果你从<strong>控制的角度</strong>来看, 两者的区别就比较大。对于前者, 只需要锁住满足条件的记录，对于后者, 要锁住满足条件及其相近的记录，这部分在后面讲Gap Lock会讲到。</p>
+<h2 id="SQL标准中的四种隔离级别"><a href="#SQL标准中的四种隔离级别" class="headerlink" title="SQL标准中的四种隔离级别"></a>SQL标准中的四种隔离级别</h2><h3 id="READ-UNCOMMITTED：未提交读"><a href="#READ-UNCOMMITTED：未提交读" class="headerlink" title="READ UNCOMMITTED：未提交读"></a>READ UNCOMMITTED：未提交读</h3><p>未提交读隔离级别下，除了<strong>脏写</strong>，其他情况都可能发生，如果连脏写都不能避免，那就等于没隔离…</p>
+<h3 id="READ-COMMITTED：已提交读"><a href="#READ-COMMITTED：已提交读" class="headerlink" title="READ COMMITTED：已提交读"></a>READ COMMITTED：已提交读</h3><p>大部分数据库默认的隔离级别。此隔离级别下，可能发生<strong>不可重复读</strong>和<strong>幻读问题</strong>，但是不可以发生<strong>脏读</strong>问题。</p>
+<h3 id="REPEATABLE-READ：可重复读"><a href="#REPEATABLE-READ：可重复读" class="headerlink" title="REPEATABLE READ：可重复读"></a>REPEATABLE READ：可重复读</h3><p>此隔离级别下，可能发生<strong>幻读</strong>问题，但是不可以发生<strong>脏读</strong>和<strong>不可重复读</strong>的问题。可重复读是MySQL<strong>默认的</strong>隔离级别，但是MySQL的可重复读是可以避免发生幻读的。</p>
+<h3 id="SERIALIZABLE：可串行化"><a href="#SERIALIZABLE：可串行化" class="headerlink" title="SERIALIZABLE：可串行化"></a>SERIALIZABLE：可串行化</h3><p>各种问题都不可以发生。但是，这种隔离级别还并发啥了…</p>
+<p>MySQL主要依靠<strong>锁</strong>以及一种针对<em>读操作</em>的优化方案<strong>MVCC</strong>来实现隔离性。同样的，具体内容会在后面文章写。</p>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/MySQL/"># MySQL</a>
+                    
+                        <a href="/tags/%E4%BA%8B%E5%8A%A1/"># 事务</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2021/01/14/springboot/features/">Spring Boot特性</a>
+            
+            
+            <a class="next" rel="next" href="/2020/06/30/mysql/performance/">影响MySQL性能的因素</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>
