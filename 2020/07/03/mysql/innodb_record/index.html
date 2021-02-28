@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>InnoDB记录结构 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">InnoDB记录结构</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">七月 3, 2020</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/MySQL/">MySQL</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>InnoDB中磁盘和内存之间交互的基本单位是<strong>页</strong>，默认大小为16KB。也就是在一般情况下，一次最少从磁盘中读取16KB的内容到内存中，一次最少把内存中的16KB内容刷新到磁盘中。</p>
+<p>我们平时是以记录为单位来向表中插入数据的，这些记录在磁盘上的存放方式也被称为<strong>行格式</strong>或者<strong>记录格式</strong>。目前共4种：</p>
+<ul>
+<li>Compact</li>
+<li>Redundant</li>
+<li>Dynamic(5.7默认)</li>
+<li>Compressed</li>
+</ul>
+<h1 id="COMPACT行格式"><a href="#COMPACT行格式" class="headerlink" title="COMPACT行格式"></a>COMPACT行格式</h1><img src="/2020/07/03/mysql/innodb_record/compact.png" class="">
+<p>一条完整的记录其实可以被分为<strong>记录的额外信息</strong>和<strong>记录的真实数据</strong>两大部分。</p>
+<h2 id="记录的额外信息"><a href="#记录的额外信息" class="headerlink" title="记录的额外信息"></a>记录的额外信息</h2><p>这部分信息是服务器为了描述这条记录而不得不额外添加的一些信息，这些额外信息分为3类，分别是<strong>变长字段长度列表</strong>、<strong>NULL值列表</strong>和<strong>记录头信息</strong>。</p>
+<h3 id="变长字段长度列表"><a href="#变长字段长度列表" class="headerlink" title="变长字段长度列表"></a>变长字段长度列表</h3><p>在COMPACT行格式中，把所有变长字段的真实数据占用的字节长度都存放在记录的开头部位，从而形成一个变长字段长度列表，各变长字段数据占用的字节数按照列的顺序<strong>逆序</strong>存放。<br>内容占用的字节数比较小，用1个字节就可以表示，但是如果变长列的内容占用的字节数比较多，可能就需要用2个字节来表示。如果该可变字段允许存储的最大字节数超过255字节并且真实存储的字节数超过127字节，则使用2个字节，否则使用1个字节。<br>变长字段长度列表中只存储值为<strong>非NULL</strong>的列内容占用的长度，值为NULL的列的长度是不储存的。<br>变长字段长度列表不是必须的，如果表中所有的列都不是变长的数据类型的话，这一部分就不需要有。</p>
+<h3 id="NULL值列表"><a href="#NULL值列表" class="headerlink" title="NULL值列表"></a>NULL值列表</h3><p>我们知道表中的某些列可能存储NULL值，如果把这些NULL值都放到记录的真实数据中存储会很占地方，所以Compact行格式把这些值为NULL的列统一管理起来，存储到NULL值列表中。<br>如果表中没有允许存储NULL的列，则<strong>NULL值列表</strong>也不存在了。，否则将每个允许存储NULL的列对应一个二进制位（1代表为NULL，0代表非NULL），二进制位按照列的顺序<strong>逆序</strong>排列。</p>
+<h3 id="逆序"><a href="#逆序" class="headerlink" title="逆序"></a>逆序</h3><p>变长字段长度列表、NULL值列表中的信息都是逆序存放，这样可以使记录中位置靠前的字段和它们对应的字段长度信息在内存中的距离更近，可能会提高高速缓存（操作系统内核空间的缓冲区）的命中率。</p>
+<h3 id="记录头信息"><a href="#记录头信息" class="headerlink" title="记录头信息"></a>记录头信息</h3><p>由固定的5个字节组成。5个字节也就是40个二进制位，不同的位代表不同的意思。主要用于储存记录的元信息，例如标记记录是否删除、表示下一条记录的相对位置等等。</p>
+<img src="/2020/07/03/mysql/innodb_record/record_header.png" class="">
+<h2 id="记录的真实数据"><a href="#记录的真实数据" class="headerlink" title="记录的真实数据"></a>记录的真实数据</h2><p>记录的真实数据除了我们自己定义的列的数据以外，MySQL会为每个记录默认的添加一些列（也称为隐藏列）。</p>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>是否必须</th>
+<th>占用空间</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DB_ROW_ID</td>
+<td>否</td>
+<td>6字节</td>
+<td>行ID，唯一标识一条记录</td>
+</tr>
+<tr>
+<td>DB_TRX_ID</td>
+<td>是</td>
+<td>6字节</td>
+<td>事务ID</td>
+</tr>
+<tr>
+<td>DB_ROLL_PTR</td>
+<td>是</td>
+<td>7字节</td>
+<td>回滚指针</td>
+</tr>
+</tbody></table>
+<p>InnoDB表对主键的生成策略：优先使用用户自定义主键作为主键，如果用户没有定义主键，则选取一个Unique键作为主键，如果表中连Unique键都没有定义的话，则InnoDB会为表默认添加一个名为row_id的隐藏列作为主键。</p>
+<h1 id="Redundant行格式"><a href="#Redundant行格式" class="headerlink" title="Redundant行格式"></a>Redundant行格式</h1><p>MySQL5.0之前用的一种行格式，不表了。</p>
+<h1 id="行溢出数据"><a href="#行溢出数据" class="headerlink" title="行溢出数据"></a>行溢出数据</h1><h2 id="VARCHAR-M-最多能存储的数据"><a href="#VARCHAR-M-最多能存储的数据" class="headerlink" title="VARCHAR(M)最多能存储的数据"></a>VARCHAR(M)最多能存储的数据</h2><p>我们知道对于VARCHAR(M)类型的列最多可以占用65535个字节。其中的M代表该类型最多存储的字符数量。如果我们使用ascii字符集的话，一个字符就代表一个字节。但是不能真的存下65535个字节。因为，这个65535个字节除了列本身的数据之外，还包括一些其他的数据（storage overhead）。为了存储一个VARCHAR(M)类型的列，其实需要占用3部分存储空间：</p>
+<ul>
+<li>真实数据</li>
+<li>真实数据占用字节的长度</li>
+<li>NULL值标识，如果该列有NOT NULL属性则可以没有这部分存储空间</li>
+</ul>
+<blockquote>
+<p>注意！一个行中的所有列（不包括隐藏列和记录头信息）占用的字节长度加起来不能超过65535个字节！所以这一小节的内容是以一个表只有一列为前提。</p>
+</blockquote>
+<h2 id="记录中的数据太多产生的溢出"><a href="#记录中的数据太多产生的溢出" class="headerlink" title="记录中的数据太多产生的溢出"></a>记录中的数据太多产生的溢出</h2><p>前面提到，Innodb是以页为基本单位来管理存储空间的，一个页的大小一般是16KB，也就是16384字节。而一行最多可以存储65532个字节，这样就可能造成一个页存放不了一条记录的尴尬情况。<br>在Compact和Redundant行格式中，对于占用存储空间非常大的列，在记录的真实数据处只会存储该列的一部分数据，把剩余的数据分散存储在几个其他的页中，然后记录的真实数据处用20个字节存储指向这些页的地址（当然这20个字节中还包括这些分散在其他页面中的数据的占用的字节数），从而可以找到剩余数据所在的页。<br>对于Compact和Redundant行格式来说，如果某一列中的数据非常多的话，在本记录的真实数据处只会存储该列的前<strong>768</strong>个字节的数据和一个指向其他页的地址，然后把剩下的数据存放到其他页中，这个过程也叫做<strong>行溢出</strong>，存储超出768字节的那些页面也被称为<strong>溢出页</strong>。</p>
+<img src="/2020/07/03/mysql/innodb_record/overflow.png" class="">
+<h2 id="行溢出的临界点"><a href="#行溢出的临界点" class="headerlink" title="行溢出的临界点"></a>行溢出的临界点</h2><p>MySQL中规定一个页中至少存放两行记录。只要不满足这个规定，那么就会发生行溢出。</p>
+<h1 id="Dynamic和Compressed行格式"><a href="#Dynamic和Compressed行格式" class="headerlink" title="Dynamic和Compressed行格式"></a>Dynamic和Compressed行格式</h1><p>这俩行格式和Compact行格式挺像，只不过在处理行溢出数据时有点儿分歧，它们不会在记录的真实数据处存储字段真实数据的前768个字节，而是把所有的字节都存储到其他页面中，只在记录的真实数据处存储其他页面的地址。</p>
+<img src="/2020/07/03/mysql/innodb_record/dynamic.png" class="">
+<p>Compressed行格式和Dynamic不同的一点是，Compressed行格式会采用压缩算法对页面进行压缩，以节省空间。</p>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/MySQL/"># MySQL</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2021/01/14/springboot/features/">Spring Boot特性</a>
+            
+            
+            <a class="next" rel="next" href="/2020/07/01/mysql/transaction/">MySQL数据库事务</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>
