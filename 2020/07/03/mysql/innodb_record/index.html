@@ -214,7 +214,7 @@
 <p>一条完整的记录其实可以被分为<strong>记录的额外信息</strong>和<strong>记录的真实数据</strong>两大部分。</p>
 <h2 id="记录的额外信息"><a href="#记录的额外信息" class="headerlink" title="记录的额外信息"></a>记录的额外信息</h2><p>这部分信息是服务器为了描述这条记录而不得不额外添加的一些信息，这些额外信息分为3类，分别是<strong>变长字段长度列表</strong>、<strong>NULL值列表</strong>和<strong>记录头信息</strong>。</p>
 <h3 id="变长字段长度列表"><a href="#变长字段长度列表" class="headerlink" title="变长字段长度列表"></a>变长字段长度列表</h3><p>在COMPACT行格式中，把所有变长字段的真实数据占用的字节长度都存放在记录的开头部位，从而形成一个变长字段长度列表，各变长字段数据占用的字节数按照列的顺序<strong>逆序</strong>存放。<br>内容占用的字节数比较小，用1个字节就可以表示，但是如果变长列的内容占用的字节数比较多，可能就需要用2个字节来表示。如果该可变字段允许存储的最大字节数超过255字节并且真实存储的字节数超过127字节，则使用2个字节，否则使用1个字节。<br>变长字段长度列表中只存储值为<strong>非NULL</strong>的列内容占用的长度，值为NULL的列的长度是不储存的。<br>变长字段长度列表不是必须的，如果表中所有的列都不是变长的数据类型的话，这一部分就不需要有。</p>
-<h3 id="NULL值列表"><a href="#NULL值列表" class="headerlink" title="NULL值列表"></a>NULL值列表</h3><p>我们知道表中的某些列可能存储NULL值，如果把这些NULL值都放到记录的真实数据中存储会很占地方，所以Compact行格式把这些值为NULL的列统一管理起来，存储到NULL值列表中。<br>如果表中没有允许存储NULL的列，则<strong>NULL值列表</strong>也不存在了。，否则将每个允许存储NULL的列对应一个二进制位（1代表为NULL，0代表非NULL），二进制位按照列的顺序<strong>逆序</strong>排列。</p>
+<h3 id="NULL值列表"><a href="#NULL值列表" class="headerlink" title="NULL值列表"></a>NULL值列表</h3><p>我们知道表中的某些列可能存储NULL值，如果把这些NULL值都放到记录的真实数据中存储会很占地方，所以Compact行格式把这些值为NULL的列统一管理起来，存储到NULL值列表中。<br>如果表中没有允许存储NULL的列，则<strong>NULL值列表</strong>也不存在了，否则将每个允许存储NULL的列对应一个二进制位（1代表为NULL，0代表非NULL），二进制位按照列的顺序<strong>逆序</strong>排列。</p>
 <h3 id="逆序"><a href="#逆序" class="headerlink" title="逆序"></a>逆序</h3><p>变长字段长度列表、NULL值列表中的信息都是逆序存放，这样可以使记录中位置靠前的字段和它们对应的字段长度信息在内存中的距离更近，可能会提高高速缓存（操作系统内核空间的缓冲区）的命中率。</p>
 <h3 id="记录头信息"><a href="#记录头信息" class="headerlink" title="记录头信息"></a>记录头信息</h3><p>由固定的5个字节组成。5个字节也就是40个二进制位，不同的位代表不同的意思。主要用于储存记录的元信息，例如标记记录是否删除、表示下一条记录的相对位置等等。</p>
 <img src="/2020/07/03/mysql/innodb_record/record_header.png" class="">
@@ -287,7 +287,7 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2021/01/14/springboot/features/">Spring Boot特性</a>
+                <a class="prev" rel="prev" href="/2020/07/04/mysql/index_page/">InnoDB索引页结构</a>
             
             
             <a class="next" rel="next" href="/2020/07/01/mysql/transaction/">MySQL数据库事务</a>
