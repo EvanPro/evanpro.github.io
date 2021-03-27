@@ -213,7 +213,7 @@
 <h3 id="next-record"><a href="#next-record" class="headerlink" title="next_record"></a>next_record</h3><p>它表示从当前记录的真实数据到下一条记录的真实数据的地址偏移量，指向记录头信息和真实数据之间的位置。这个位置刚刚好，向左读取就是记录头信息，向右读取就是真实数据。InnoDB通过这个字段将页中的所有记录<strong>按主键从小到大</strong>连接成一个<strong>单向链表</strong>。</p>
 <img src="/2020/07/04/mysql/index_page/page3.png" class="">
 
-<h2 id="Page-Directory（页目录）"><a href="#Page-Directory（页目录）" class="headerlink" title="Page Directory（页目录）"></a>Page Directory（页目录）</h2><p>为了在单个页中根据主键快速找到某条记录，InnoDB将页中的记录划分为若干个组，每个组的最后一个记录的地址偏移量作为一个槽，存放在Page Directory中。</p>
+<h2 id="Page-Directory（页目录）"><a href="#Page-Directory（页目录）" class="headerlink" title="Page Directory（页目录）"></a>Page Directory（页目录）</h2><p>为了在<strong>单个页</strong>中根据主键快速找到某条记录，InnoDB将页中的记录划分为若干个组，每个组的最后一个记录的地址偏移量作为一个槽，存放在Page Directory中。</p>
 <img src="/2020/07/04/mysql/index_page/page4.png" class="">
 
 <p>每个组的最后一条记录（也就是组内最大的那条记录）的头信息中的<strong>n_owned</strong>属性表示该记录拥有多少条记录，也就是该组内共有几条记录。InnoDB对每个分组中的记录条数是有规定的：对于最小记录所在的分组只能有<strong>1</strong>条记录，最大记录所在的分组拥有的记录条数只能在<strong>1~8</strong>条之间，剩下的分组中记录的条数范围只能在是<strong>4~8</strong>条之间。</p>
@@ -246,7 +246,7 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2021/01/14/springboot/features/">Spring Boot特性</a>
+                <a class="prev" rel="prev" href="/2020/07/05/mysql/b+Index/">B+树索引</a>
             
             
             <a class="next" rel="next" href="/2020/07/03/mysql/innodb_record/">InnoDB记录结构</a>

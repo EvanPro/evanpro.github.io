@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>B+树索引 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">B+树索引</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">七月 5, 2020</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/MySQL/">MySQL</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h2 id="读写效率"><a href="#读写效率" class="headerlink" title="读写效率"></a>读写效率</h2><p>索引的目的是什么，当然是更快地检索到想要找的数据。但是检索的速度还跟数据的存储介质有关，众所周知，内存要比硬盘读写更快，但是其实也分情况。<br>一般来说，如果是随机读写，会有10万到100万倍左右的差距。但如果是<strong>顺序访问</strong>大批量数据的话，磁盘的性能和内存就是一个数量级的。这里面的原理不在这篇文章的讨论范围内，默认这一事实即可。<br>对于数据库来说，它存储的数据必然是非常庞大的，数据无法全部存储在内存中，需要借助磁盘完成存储和检索。<br>假设有一个有序数组存储在硬盘中，如果它足够大，那么它会存储在多个块中。当我们要对这个数组使用二分查找时，需要先找到中间元素所在的块，将这个块从磁盘中读到内存里，然后在内存中进行二分查找。如果下一步要读的元素在其他块中，则需要再将相应块从磁盘中读入内存。直到查询结束，这个过程可能会多次访问磁盘。我们可以看到，这样的检索性能非常低。由于磁盘相对于内存而言访问速度实在太慢，因此，对于磁盘上数据的高效检索，我们有一个极其重要的原则：<strong>对磁盘的访问次数要尽可能的少！</strong><br>为了减少磁盘的访问次数，将<strong>索引和数据分离</strong>就是一种常见的设计思路。</p>
+<h2 id="线性索引方案"><a href="#线性索引方案" class="headerlink" title="线性索引方案"></a>线性索引方案</h2><p>上篇文章讲到，在单个索引页内查找一条记录，只需要根据页目录进行二分查找就可以了。由于一个索引页肯定无法储存我们所有的记录，因此我们需要在多个索引页中查找我们需要的记录，这就需要我们先定位到记录所在的索引页，然后在根据页目录查找相应的记录。</p>
+<p>最简单的索引方案和页目录的做法类似，我们可以为所有的索引页做一个目录，每页对应一个目录项，每个目录项的内容包括两项内容：</p>
+<ul>
+<li>页的用户记录中最小的主键值，我们用key来表示。</li>
+<li>页号，我们用page_no表示。<img src="/2020/07/05/mysql/b+Index/dictionary.png" class="">
+这样所有的目录项组成了一个有序数组，它占用的空间很小，可以放入内存中，这种方案叫做线性索引。<h3 id="页分裂"><a href="#页分裂" class="headerlink" title="页分裂"></a>页分裂</h3>大部分的检索算法都需要保证要检索的东西是<strong>有序的</strong>。因此，我们必须通过一些诸如记录移动的操作来始终保证：下一个数据页中用户记录的主键值必须大于上一个页中用户记录的主键值。这个过程我们也可以称为<strong>页分裂</strong>。</li>
+</ul>
+<h2 id="B-树索引"><a href="#B-树索引" class="headerlink" title="B+树索引"></a>B+树索引</h2><p>在数据频繁变化的场景中，有序数组并不是一个最好的选择，二叉检索树或者哈希表往往更有普适性。但是，哈希表由于缺乏范围检索的能力，在一些场合也不适用。因此，二叉检索树这种树形结构是许多常见检索系统的实施方案。<br>InnoDB使用B+树作为索引的数据结构，至于为什么稍后再讲，先来看看InnoDB中索引是怎样工作的。<br>首先可以看到，目录项和普通的用户记录差不多，只不过它存储的是主键和页号而已，所以可以直接复用之前存储用户记录的索引页来存储目录项，为了和用户记录做一下区分，在记录头信息中将<strong>record_type</strong>标记为1，它的各个取值代表的意思如下：</p>
+<ul>
+<li>0：普通的用户记录</li>
+<li>1：目录项记录</li>
+<li>2：最小记录</li>
+<li>3：最大记录</li>
+</ul>
+<p>将存储目录项的索引页以及存储实际用户数据的索引页套入到B+树的数据结构中后，索引就长这样：</p>
+<img src="/2020/07/05/mysql/b+Index/B+tree.png" class="">
+<h3 id="聚簇索引"><a href="#聚簇索引" class="headerlink" title="聚簇索引"></a>聚簇索引</h3><p>InnoDB默认会为每个表创建这样一个索引，叫做聚簇索引。<br>它有如下特点：</p>
+<ol>
+<li>使用记录主键值的大小进行记录和页的排序，这包括三个方面的含义：<ul>
+<li>页内的记录是按照主键的大小顺序排成一个单向链表。</li>
+<li>各个存放用户记录的页也是根据页中用户记录的主键大小顺序排成一个双向链表。</li>
+<li>存放目录项记录的页分为不同的层次，在同一层次中的页也是根据页中目录项记录的主键大小顺序排成一个双向链表。</li>
+</ul>
+</li>
+<li>B+树的叶子节点存储的是完整的用户记录。</li>
+</ol>
+<h3 id="二级索引"><a href="#二级索引" class="headerlink" title="二级索引"></a>二级索引</h3><p>聚簇索引只能在搜索条件是主键值时才能发挥作用。因此如果我们想以别的列（1列或者多列是一样的）作为检索条件时，就可以以这个列替换主键在聚簇索引中的作用，再创建一个B+树索引，这样的索引叫做二级索引。它与聚簇索引的主要区别在于叶子节点中存储的不再是完整的用户记录，而是<strong>指定列</strong>和<strong>主键</strong>这两个列的值。  </p>
+<h4 id="回表"><a href="#回表" class="headerlink" title="回表"></a>回表</h4><p>当我们需要根据指定列查询完整的用户记录时，我们需要根据二级索引查找到记录的主键值，然后再根据主键值使用聚簇索引查询完整的用户记录，这一过程叫做<strong>回表</strong>。<br>回表是有代价的，举个例子：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> person_info <span class="keyword">WHERE</span> name <span class="operator">&gt;</span> <span class="string">&#x27;Asa&#x27;</span> <span class="keyword">AND</span> name <span class="operator">&lt;</span> <span class="string">&#x27;Barlow&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<p>使用二级索引（name）进行范围查询，然后根据主键进行回表。使用二级索引时，数据都会在相近的几个数据页中，我们可以通过顺序I/O很快的把这些连着的记录从磁盘中读出来。但是根据主键回表时，数据可能分布在不同的数据页中，这样就会随机I/O。<br>因此应该尽量避免使用*号作为查询列表，最好把我们需要查询的列依次标明，在创建联合索引的时候尽量保证索引列的集合就是要检索的列的超集，也就是覆盖索引。<br>回表的记录越多，使用二级索引的性能就越低，甚至让某些查询宁愿使用全表扫描也不使用二级索引。需要回表的记录越少，查询优化器就越倾向使用二级索引而不是全表扫描。因此如果某些情况确实无法执行覆盖索引，如果可以使用LIMIT子句，那么优化器就会倾向于使用二级索引+回表的方式执行查询。</p>
+<h2 id="为什么是B-树？"><a href="#为什么是B-树？" class="headerlink" title="为什么是B+树？"></a>为什么是B+树？</h2><p>上面提到，尽管二叉检索树可以解决数据动态修改的问题，但在索引数据很大的情况下，依然会有数据无法完全加载到内存中。一个很自然的思路，就是将索引数据也存在磁盘中。那如果是树形索引，我们应该将哪些节点存入磁盘，又要如何从磁盘中读出这些数据进行检索呢？<br>B+树给出了将树形索引的<strong>所有节点都存在磁盘上</strong>的高效检索方案。使得索引技术摆脱了内存空间的限制，得到了广泛的应用。<br>操作系统对磁盘数据的访问是以块为单位的。因此，如果我们想将树型索引的一个节点从磁盘中读出，即使该节点的数据量很小，但磁盘依然会将整个块的数据全部读出来，而不是只读这一小部分数据，这会让有效读取效率很低。<br>B+ 树的一个关键设计，就是<strong>让一个节点的大小等于一个块的大小。节点内存储的数据，不是一个记录，而是一个可以装m个记录的有序数组</strong>。这样一来，我们就可以将磁盘一次读取的数据全部利用起来，使得读取效率最大化。<br>B+ 树还有另一个设计，就是将所有的节点分为内部节点和叶子节点。尽管内部节点和叶子节点的数据结构是一样的，但存储的内容是不同的。内部节点仅存储 key 和维持树形结构的指针，并不存储 key 对应的数据（无论是具体数据还是文件位置信息）。这样内部节点就能存储更多的索引数据，我们也就可以使用最少的内部节点，将所有数据组织起来了。而叶子节点仅存储 key 和对应数据，不存储维持树形结构的指针。通过这样的设计，B+ 树就能做到节点的空间利用率最大化。</p>
+<img src="/2020/07/05/mysql/b+Index/node.jpg" class="">
+<p>此外，B+ 树还将同一层的所有节点串成了有序的双向链表，这样一来，B+ 树就同时具备了良好的范围查询能力和灵活调整的能力了。<br>因此，B+ 树是一棵<strong>完全平衡的 m 阶多叉树</strong>。所谓的 m 阶，指的是每个节点<strong>最多</strong>有 m 个子节点，并且每个节点里都存了一个紧凑的可包含 m 个元素的数组。B+ 树的一个节点就能存储一个包含 m 个元素的数组，这样的话，一个只有 2 到 4 层的 B+ 树，就能索引数量级非常大的数据了，因此 B+ 树的层数往往很矮。比如说，一个 4K 的节点的内部可以存储 400 个元素，那么一个 4 层的 B+ 树最多能存储 400^4，也就是 256 亿个元素。</p>
+<h3 id="检索过程"><a href="#检索过程" class="headerlink" title="检索过程"></a>检索过程</h3><p>因为B+树一个节点的大小等于一个块的大小，因此当我们检索一个记录时，通过一次硬盘访问，就可以将根节点的所有数据读出，然后在根节点的有序数组中二分查找下一个需要读取的块的地址，因此在B+树的每一层我们只需要读取一次硬盘，如果B+树有4层，那么我们最多读取4次硬盘，就可以到达叶子节点。<br>我们还可以将内部节点存入内存，来进一步减少对硬盘的读取。比如说一个4层的B+树，每个节点大小为4K，那么第一层根节点就是 4K，第二层最多有 400 个节点，一共就是 1.6M；第三层最多有 400^2，也就是 160000 个节点，一共就是 640M。对于现在常见的计算机来说，前三层的内部节点其实都可以存储在内存中，只有第四层的叶子节点才需要存储在磁盘中。</p>
+<h3 id="B-树动态调整"><a href="#B-树动态调整" class="headerlink" title="B+树动态调整"></a>B+树动态调整</h3><p>因为B+树是完全平衡的多叉树，因此在新增节点和删除节点时，是需要进行动态调整的。</p>
+<h4 id="插入数据"><a href="#插入数据" class="headerlink" title="插入数据"></a>插入数据</h4><p>由于具体的数据都是存储在叶子节点上的，因此，数据的插入也是从叶子节点开始的。以一个节点有 3 个元素的 B+ 树为例，如果我们要插入一个 ID=6 的节点，首先要查询到对应的叶子节点。如果叶子节点的数组未满，那么直接将该元素插入数组即可。具体过程如下图所示：</p>
+<img src="/2020/07/05/mysql/b+Index/insert.jpg" class="">
+<p>如果我们插入的是 ID=10 的节点呢？按之前的逻辑，我们应该插入到 ID 9 后面，但是 ID 9 所在的这个节点已经存满了 3 个节点，无法继续存入了。因此，我们需要将该叶子节点分裂（也就是页分裂）。分裂的逻辑就是生成一个新节点，并将数据在两个节点中平分。</p>
+<img src="/2020/07/05/mysql/b+Index/insert1.jpg" class="">
+<p>叶子节点分裂完成以后，上一层的内部节点也需要修改。但如果上一层的父节点也是满的，那么上一层的父节点也需要分裂。</p>
+<img src="/2020/07/05/mysql/b+Index/insert2.jpg" class="">
+<p>内部节点调整好了，下一步我们就要调整根节点了。由于根节点未满，因此我们不需要分裂，直接修改即可。</p>
+<img src="/2020/07/05/mysql/b+Index/insert3.jpg" class="">
+<p>删除数据也类似，如果节点数组较满，直接删除；如果删除后数组有一半以上的空间为空，那为了提高节点的空间利用率，该节点需要将左右两边兄弟节点的元素转移过来。可以成功转移的条件是，元素转移后该节点及其兄弟节点的空间必须都能维持在半满以上。如果无法满足这个条件，就说明兄弟节点其实也足够空闲，那我们直接将该节点的元素并入兄弟节点，然后删除该节点即可。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>B+树索引的检索过程其实也是二分查找，因此如果B+树索引完全加载在内存中的话，它的检索效率其实并不会比有序数组或者二叉检索树更高，也还是二分查找的 log(n) 的效率。并且，它还比数组和二叉检索树更加复杂，还会带来额外的开销。但是，B+ 树最大的优点在于，它提供了将索引数据存在磁盘中，以及高效检索的方案。这让检索技术摆脱了内存的限制，得到了更广泛地使用。<br>单个索引页内的页目录其实就是一个有序数组，正因为在多个索引页间检索使用的是B+树，因此页目录可以维持在一个较小的范围内，这使得在索引数据很大的情况下，B+树依然可以将索引数据和用户数据（或者说内部节点和叶子节点）分别存储在内存和硬盘中。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://juejin.cn/book/6844733769996304392/section/6844733770046668814">B+树索引</a></li>
+<li><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/221798">数据库检索：如何使用B+树对海量磁盘数据建立索引？</a></li>
+</ul>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/MySQL/"># MySQL</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2021/01/14/springboot/features/">Spring Boot特性</a>
+            
+            
+            <a class="next" rel="next" href="/2020/07/04/mysql/index_page/">InnoDB索引页结构</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>
