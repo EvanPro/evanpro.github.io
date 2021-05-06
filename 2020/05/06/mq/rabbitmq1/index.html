@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>RabbitMQ初探 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">RabbitMQ初探</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">五月 6, 2020</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/MQ/">MQ</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="消息中间件"><a href="#消息中间件" class="headerlink" title="消息中间件"></a>消息中间件</h1><p>消息中间件一般有两种传递模式：点对点模式和发布订阅模式。<br>点对点模式是基于<strong>队列</strong>的，生产者将消息发送到队列，消费者从队列中接收消息。<br>发布订阅模式定义了如何向一个内容节点发布和订阅消息，这个内容节点称为topic，topic可以认为是消息传递的中介，它只是一个<strong>逻辑概念</strong>，消息真正是怎样进行存储的还是要看具体MQ的实现。<br>这两种模式其实就是<strong>单播</strong>和<strong>广播</strong>的区别，而且当订阅者只有一个时，后者和前者在功能上是完全兼容的。因此主流的RocketMQ、Kafka都是直接基于发布订阅模式实现的。RabbitMQ和Kafka等有些区别，但是大体意思都差不多。</p>
+<h1 id="AMQP基础概念"><a href="#AMQP基础概念" class="headerlink" title="AMQP基础概念"></a>AMQP基础概念</h1><img src="/2020/05/06/mq/rabbitmq1/rabbitmq.jfif" class="">
+
+<h2 id="Exchange、RoutingKey、Binding"><a href="#Exchange、RoutingKey、Binding" class="headerlink" title="Exchange、RoutingKey、Binding"></a>Exchange、RoutingKey、Binding</h2><h3 id="Exchange"><a href="#Exchange" class="headerlink" title="Exchange"></a>Exchange</h3><p>在RabbitMQ中，生产者将消息发送到Exchange，而不是队列之中。消息是由Exchange路由到一个或多个队列之中，如果路由不到，或返回给生产者、或直接丢弃。  </p>
+<h3 id="RoutingKey"><a href="#RoutingKey" class="headerlink" title="RoutingKey"></a>RoutingKey</h3><p>生产者将消息发送给Exchange时，一般会指定一个RoutingKey，Exchange会根据这个值选择一些路由规则。</p>
+<h3 id="Binding"><a href="#Binding" class="headerlink" title="Binding"></a>Binding</h3><p>RabbitMQ通过Bingding将Exchange和队列关联起来，在绑定的时候一般会指定一个BindingKey。</p>
+<h3 id="Exchange类型"><a href="#Exchange类型" class="headerlink" title="Exchange类型"></a>Exchange类型</h3><p>Exchange有4种类型对应4种不同的路由策略。  </p>
+<h4 id="fanout"><a href="#fanout" class="headerlink" title="fanout"></a>fanout</h4><p>针对队列的广播，它会忽略BindingKey，将所有发送到该Exchange的消息路由到所有与该Exchange绑定的队列中。</p>
+<h4 id="direct"><a href="#direct" class="headerlink" title="direct"></a>direct</h4><p>它会将消息路由到那些RoutingKey和BindingKey完全一样的队列中。</p>
+<h4 id="topic"><a href="#topic" class="headerlink" title="topic"></a>topic</h4><p>与direct类似，只不过不要求RoutingKey和BindingKey完全一致，可以模糊匹配。</p>
+<h4 id="headers"><a href="#headers" class="headerlink" title="headers"></a>headers</h4><p>根据消息内容中的headers属性进行匹配，很少用。</p>
+<h2 id="队列"><a href="#队列" class="headerlink" title="队列"></a>队列</h2><p>RabbitMQ中，队列用于存储消息。多个消费者可以订阅同一个队列，但是消息是以轮询的方式交给多个消费者处理的。RabbitMQ<strong>不支持</strong>队列层面的广播消费，如果需要则需要进行二次开发，不建议这么做。广播需要借助Exchange来实现。</p>
+<h1 id="RabbitMQ特性"><a href="#RabbitMQ特性" class="headerlink" title="RabbitMQ特性"></a>RabbitMQ特性</h1><h2 id="过期时间（TTL）"><a href="#过期时间（TTL）" class="headerlink" title="过期时间（TTL）"></a>过期时间（TTL）</h2><p>RabbitMQ可以对<strong>消息</strong>和<strong>队列</strong>设置TTL。<br>给队列设置了TTL后，队列内所有消息会拥有相同的过期时间。如果消息和队列都设置了TTL，那么以两者间最小的为准。消息一旦超过了TTL，那么就会变为死信（Dead Message）。<br>队列设置TTL的方式是创建队列时指定<strong>x-message-ttl</strong>参数，单位毫秒。<br>消息设置TTL的方法是给消息增加<strong>expiration</strong>属性，单位毫秒。如果为单个消息设置TTL并且此消息过期了，不会立即从队列中删除，而是在出队时进行判断。</p>
+<h2 id="死信队列"><a href="#死信队列" class="headerlink" title="死信队列"></a>死信队列</h2><p>当消息在一个队列中变成死信之后，它能被重新被发送到另一个exchange，DLX（Dead-Letter-Exchange）中。绑定了DLX的队列就称为死信队列。<br>消息变死信的情况：</p>
+<ul>
+<li>消息被拒绝，并且requeue参数为false；</li>
+<li>消息过期</li>
+<li>队列达到最大长度</li>
+</ul>
+<p>DLX与一般的exchange没有区别，可以在任何队列上通过<strong>x-dead-letter-exchange</strong>参数指定。</p>
+<h2 id="持久化"><a href="#持久化" class="headerlink" title="持久化"></a>持久化</h2><p>RabbitMQ持久化分三个部分：exchange持久化、队列持久化和消息的持久化。<br>exchange持久化只需要在exchange声明时将durable设置为true，这样能保证exchange的元数据不会丢失。队列持久化只需要在队列声明时将durable设置为true，同样的，队列持久化保证的是队列的元数据不丢失，但是并不保证消息不丢失。因此要确保消息不丢失，需要设置消息的投递模式为持久化。消息的持久化建立在队列持久化的前提下，单独设置消息持久化无意义。消息持久化是通过写入磁盘实现的，因此会拖慢RabbitMQ的性能。<br>但是这三部分的持久化并不能100%保证数据不丢失，依然需要镜像队列和事务机制的帮助。</p>
+<h2 id="生产者确认"><a href="#生产者确认" class="headerlink" title="生产者确认"></a>生产者确认</h2><p>针对生产者无法知道消息是否真正到达RabbitMQ的exchange这种情况，RabbitMQ提供了两种解决方案。</p>
+<h3 id="事务机制"><a href="#事务机制" class="headerlink" title="事务机制"></a>事务机制</h3><p>RabbitMQ是有事务机制的。使用channel.txSelect方法开启事务，channel.commit方法提交事务，channel.txRollback方法回滚事务。但是事务机制非常耗费性能，因此RabbitMQ提供了改进方案。</p>
+<h3 id="发送方确认（publisher-confirm）"><a href="#发送方确认（publisher-confirm）" class="headerlink" title="发送方确认（publisher confirm）"></a>发送方确认（publisher confirm）</h3><p>生产者将信道设置为confirm模式，所有在该信道上面发布的消息都会被指派一个唯一ID（从1开始），一旦消息被投递到所有匹配的队列之后，RabbitMQ就会发送一个确认（Basic.Ack）给生产者（包含消息的唯一ID）。如果消息和队列是持久化的，那么确认消息会在消息写入磁盘后发出。RabbitMQ回传给生产者的确认消息中的deliveryTag包含了确认消息的序号，此外RabbitMQ也可以设置channel.basicAck方法中的multiple参数，表示到这个序号之前的所有消息都已经得到了处理。这简直就是TCP协议可靠性传输的翻版~</p>
+<h2 id="消费端要点"><a href="#消费端要点" class="headerlink" title="消费端要点"></a>消费端要点</h2><h3 id="消息分发"><a href="#消息分发" class="headerlink" title="消息分发"></a>消息分发</h3><p>因为RabbitMQ的队列是不支持广播的，队列收到消息后会以轮询的方式分发消息，但是每个消费者的消费能力可能不一样，轮询的方式就会造成整个系统的吞吐量下降，RabbitMQ提供了channel.basicQos方法来限制信道上的消费者所能保持的最大未确认消息的数量。这种机制可以类比TCP/IP中的“滑动窗口”。</p>
+<h3 id="消息顺序性"><a href="#消息顺序性" class="headerlink" title="消息顺序性"></a>消息顺序性</h3><p>RabbitMQ无法保证在任何情况下，消息者消费消息的顺序与生产者发送消息的顺序一致。</p>
+<h2 id="消息传输保障"><a href="#消息传输保障" class="headerlink" title="消息传输保障"></a>消息传输保障</h2><p>一般消息中间件的消息传输保障分为三个层次：</p>
+<ul>
+<li>最多一次</li>
+<li>最少一次</li>
+<li>恰好一次</li>
+</ul>
+<p>RabbitMQ可以通过生产者确认、消息持久化、消费者ack等机制保证<strong>最多一次</strong>和<strong>最少一次</strong>，但是没有去重机制保证恰好一次。去重处理一般是在业务客户端实现。</p>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/RabbitMQ/"># RabbitMQ</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2020/06/30/mysql/performance/">影响MySQL性能的因素</a>
+            
+            
+            <a class="next" rel="next" href="/2019/06/19/spring-security/architecture/">Spring Security 概述</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>
