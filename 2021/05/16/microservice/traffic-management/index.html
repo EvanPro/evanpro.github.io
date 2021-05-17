@@ -225,7 +225,7 @@
 <h3 id="并行调用（Forking）"><a href="#并行调用（Forking）" class="headerlink" title="并行调用（Forking）"></a>并行调用（Forking）</h3><p>并行调用策略，是指一开始就同时向多个服务副本发起调用，只要有其中任何一个返回成功，那调用便宣告成功。</p>
 <h3 id="广播调用（Broadcast）"><a href="#广播调用（Broadcast）" class="headerlink" title="广播调用（Broadcast）"></a>广播调用（Broadcast）</h3><p>广播调用与并行调用是相对应的，都是同时发起多个调用，但并行调用是任何一个调用结果返回成功便宣告成功，而广播调用则是要求所有的请求全部都成功，才算是成功。</p>
 <h2 id="容错设计模式"><a href="#容错设计模式" class="headerlink" title="容错设计模式"></a>容错设计模式</h2><p>容错设计模式，指的是“要实现某种容错策略，我们该如何去做”。</p>
-<h3 id="断路器模式"><a href="#断路器模式" class="headerlink" title="断路器模式"></a>断路器模式</h3><p>断路器做的事情是自动进行服务熔断，属于一种快速失败的容错策略的实现方法。断路器一般可以设置为 CLOSED、OPEN 和 HALF OPEN 三种状态。</p>
+<h3 id="断路器模式"><a href="#断路器模式" class="headerlink" title="断路器模式"></a>断路器模式</h3><p><a target="_blank" rel="noopener" href="https://martinfowler.com/bliki/CircuitBreaker.html">断路器</a>做的事情是自动进行服务熔断，属于一种快速失败的容错策略的实现方法。断路器一般可以设置为 CLOSED、OPEN 和 HALF OPEN 三种状态。</p>
 <ul>
 <li><p>在断路器刚刚建立的时候，默认是CLOSED状态。此时的远程请求会真正发送给服务提供者，此后将持续监视远程请求的数量和执行结果，决定是否要进入 OPEN 状态。</p>
 </li>
