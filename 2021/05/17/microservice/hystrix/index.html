@@ -14,7 +14,7 @@
 
 
 
-<title>分类: microservice | Evan&#39;s Blog</title>
+<title>Hystrix实现原理 | Evan&#39;s Blog</title>
 
 
 
@@ -110,39 +110,71 @@
     }
 </script>
         <div class="main">
+            <div class="container">
+    
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Hystrix实现原理</h1>
             
+                <div class="post-meta">
+                    
 
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">五月 17, 2021</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/microservice/">microservice</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
 
-    
-<div class="container">
-    <div class="post-wrap categories">
-        <h2 class="post-title">-&nbsp;Categories&nbsp;·&nbsp;microservice-</h2>
-    </div>
-    <div class="post-wrap archive">
-    
-    
+        <div class="post-content">
+            <p><a target="_blank" rel="noopener" href="https://github.com/Netflix/hystrix">Hystrix</a>是Netflix开源的一个解决分布式系统延迟和服务容错的类库。它主要实现了<a href="#">Post not found: traffic-management</a>中的<a target="_blank" rel="noopener" href="https://martinfowler.com/bliki/CircuitBreaker.html">断路器模式</a>。除了断路器模式之外，Hystrix还提供了<strong>服务隔离</strong>、<strong>请求合并</strong>、<strong>请求缓存</strong>的功能。</p>
+<p>Netflix在2018年就已经宣布不再更新Hystrix项目了，将重点转向能够自适应应用<strong>实时</strong>性能指标的实现，而不是像现在这样，只能预先配置好相关选项。这个也是流量治理的发展方向，在云原生时代，Service Mesh实现弹性的、分布式的流量治理，会是一个令人期待的特性。</p>
+<p>虽然Hystrix已经不再更新，但是它的一些实现原理能够帮助我们更好的理解流量治理。所以本文会对Hystrix的实现原理进行一些探讨。</p>
+
+        </div>
+
         
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E6%9C%8D%E5%8A%A1%E6%B2%BB%E7%90%86/"># 服务治理</a>
+                    
+                        <a href="/tags/Hystrix/"># Hystrix</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2021/05/16/microservice/traffic-management/">流量治理</a>
+            
+        </section>
 
-        
-            <h3>2021</h3>
-        
 
-        <article class="archive-item">
-            <a class="archive-item-link" href="/2021/05/17/microservice/hystrix/">Hystrix实现原理</a>
-            <span class="archive-item-date">五月 17, 2021</span>
-        </article>
-    
-        
-
-        
-
-        <article class="archive-item">
-            <a class="archive-item-link" href="/2021/05/16/microservice/traffic-management/">流量治理</a>
-            <span class="archive-item-date">五月 16, 2021</span>
-        </article>
-    
-    
-</div>
+    </article>
 </div>
 
         </div>
