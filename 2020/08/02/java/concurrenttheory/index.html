@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>并发编程背景知识 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">并发编程背景知识</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">八月 2, 2020</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/java/">java</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="并发编程存在的问题"><a href="#并发编程存在的问题" class="headerlink" title="并发编程存在的问题"></a>并发编程存在的问题</h1><p>CPU、内存、I/O 设备是计算机体系中重要的组成部分。三者的速度差异非常大，因此为了合理利用CPU，平衡三者的速度差异，在计算机科学的诸多领域都做了努力：</p>
+<ol>
+<li>CPU 增加了缓存，以均衡与内存的速度差异</li>
+<li>操作系统增加了进程、线程，以分时复用 CPU，进而均衡 CPU 与 I/O 设备的速度差异</li>
+<li>编译程序优化指令执行次序，使得缓存能够得到更加合理地利用</li>
+</ol>
+<p>上述这些举措也是并发编程经常出现问题的源头。</p>
+<h2 id="可见性"><a href="#可见性" class="headerlink" title="可见性"></a>可见性</h2><p>一个线程对共享变量的修改，另外一个线程能够立刻看到，我们称为<strong>可见性</strong>。如果是单核CPU，那么多个线程在同一个CPU上执行，一个线程对缓存的写，对另外一个线程来说一定是可见的。如果是多核，每个CPU都有自己的缓存，这时就会造成缓存可见性问题。</p>
+<h2 id="原子性"><a href="#原子性" class="headerlink" title="原子性"></a>原子性</h2><p>线程是操作系统调度的最小单位，在某个线程的时间片用完后，操作系统会进行线程切换。操作系统做线程切换，可以发生在任何一条<strong>CPU指令</strong>执行完，但是高级编程语言的一条语句往往对应于多条CPU指令，这就会造我们的一条语句“执行了一半就被切走了”的情况，最终结果与直觉不符。</p>
+<img src="/2020/08/02/java/concurrenttheory/atom.png" class="">
+<p>我们把一个或者多个操作在 CPU 执行的过程中不被中断的特性称为<strong>原子性</strong>。</p>
+<h2 id="有序性"><a href="#有序性" class="headerlink" title="有序性"></a>有序性</h2><p>有序性指的是程序按照代码的先后顺序执行。编译器为了优化性能，有时候会改变程序中语句的先后顺序。以双重检查创建单例对象为例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> </span>&#123;</span><br><span class="line">  <span class="keyword">static</span> Singleton instance;</span><br><span class="line">  <span class="function"><span class="keyword">static</span> Singleton <span class="title">getInstance</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (instance == <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">synchronized</span>(Singleton.class) &#123;</span><br><span class="line">        <span class="keyword">if</span> (instance == <span class="keyword">null</span>)</span><br><span class="line">          instance = <span class="keyword">new</span> Singleton();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> instance;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述代码看似很完美，但是并不能保证线程安全，问题出在new操作上，我们以为的 new 操作应该是：</p>
+<ol>
+<li>分配一块内存 M</li>
+<li>在内存 M 上初始化 Singleton 对象</li>
+<li>然后 M 的地址赋值给 instance 变量</li>
+</ol>
+<p>但是优化后可能是：</p>
+<ol>
+<li>分配一块内存 M</li>
+<li>将 M 的地址赋值给 instance 变量</li>
+<li>最后在内存 M 上初始化 Singleton 对象</li>
+</ol>
+<p>我们假设线程 A 先执行 getInstance() 方法，当执行完指令 2 时恰好发生了线程切换，切换到了线程 B 上；如果此时线程 B 也执行 getInstance() 方法。那么线程 B 在执行第一个判断时<strong>可能</strong>会看见线程 A 指令2的操作结果，也就是说instance != null。所以直接返回未经初始化的instance对象。<br>那么一个可行的解决方案就是将instance变量设置为<strong>volatile</strong>，<strong>禁止指令重排序</strong>。这样就能避免线程在未按顺序执行完指令1、2、3之前，获取到instance != null的情况。</p>
+<h1 id="Java内存模型解决可见性和有序性"><a href="#Java内存模型解决可见性和有序性" class="headerlink" title="Java内存模型解决可见性和有序性"></a>Java内存模型解决可见性和有序性</h1><p>JMM是抽象的协议，屏蔽了各种硬件和操作系统的内存访问差异。它规定了：</p>
+<blockquote>
+<p>所有的变量都存储在主内存中，每个线程还有自己的<strong>工作内存</strong>，线程的工作内存中保存了该线程使用到的变量（主内存的拷贝），线程对变量的所有操作（读取、赋值）都必须在工作内存中进行，而不能直接读写主内存中的变量。不同线程之间无法直接访问对方工作内存中的变量，线程间变量值的传递均需要在主内存来完成。</p>
+</blockquote>
+<p>但是JMM跟真实硬件内存架构是不同的，线程的工作内存可能包括CPU 寄存器、缓存和主存。</p>
+<img src="/2020/08/02/java/concurrenttheory/jmm.webp" class="">
+
+<p>这些概念性的东西，我在第一次看的时候是一脸的懵逼，作为一个程序员，我觉得一点都不接地气。那么先忘掉刚刚看的JMM概念性的东西，换一种角度理解JMM。<br>我们知道导致可见性的原因是缓存，导致有序性的原因是编译优化，那解决可见性、有序性最直接的办法就是<strong>禁用缓存和编译优化</strong>，但是这样问题虽然解决了，我们程序的性能可就堪忧了。合理的方案应该是<strong>按需</strong>禁用缓存以及编译优化。所以，为了解决<strong>可见性和有序性</strong>问题，只需要提供给程序员按需禁用缓存和编译优化的方法即可。JMM规范了 JVM 如何提供按需禁用缓存和编译优化的方法。<br>现在是不是明白一点了呢，也就是说JMM面向的是多种不同的角色。对于使用它的程序员来说，它提供了一套方法保障了可见性和有序性；对于适配底层硬件架构的开发人员来说，它是一套需要实现的规范。很多时候我们看到JMM一脸懵逼的原因，可能是思考的方式不对~  </p>
+<p>那么JMM为我们程序员提供了哪些工具和方法呢？具体包括：包括 volatile、synchronized 和 final 三个关键字，以及八项<code>Happens-Before</code>规则。</p>
+<h2 id="Happens-Before"><a href="#Happens-Before" class="headerlink" title="Happens-Before"></a>Happens-Before</h2><p><code>Happens-Before</code>并不是说前面一个操作发生在后续操作的前面，它真正要表达的是：<strong>前面一个操作的结果对后续操作是可见的</strong>。如果直接看<code>Happens-Before</code>的条款，也是非常晦涩的。先来看一个例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">VolatileExample</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> x = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">volatile</span> <span class="keyword">boolean</span> v = <span class="keyword">false</span>;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">writer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    x = <span class="number">42</span>; <span class="comment">// a</span></span><br><span class="line">    v = <span class="keyword">true</span>;  <span class="comment">// b</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">reader</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (v == <span class="keyword">true</span>) &#123;<span class="comment">// c</span></span><br><span class="line">      <span class="comment">// 这里x会是多少呢？  // d</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>程序的顺序性规则<br>在一个线程中，按照程序顺序，前面的操作<code>Happens-Before</code>于后续的任意操作。这个很好理解，不多说。如果这个都不能保证，单线程也就不线程安全了。</li>
+<li>volatile变量规则<br>对一个<code>volatile</code>变量的写操作，<code>Happens-Before</code>于后续对这个<code>volatile</code>变量的读操作。保证了单个<code>volatile</code>变量的可见性。</li>
+<li>传递性<br>如果A <code>Happens-Before</code> B，B<code>Happens-Before</code>C，那么A <code>Happens-Before</code> C。这条规则可太重要了！以上面的代码为例，假设线程A执行了writer()方法，线程B执行reader()方法，那么执行到第10行时，x会是多少呢？在JDK1.5之前，x可能是42，也可能是0。因为x变量没有标注<code>volatile</code>，无法保证其可见性。但是JDK1.5之后x一定是42，因为JDK1.5增强了<code>volatile</code>语义，也就是增加了上面第二个规则，从而由 a <code>Happens-Before</code> b，c <code>Happens-Before</code> d，b <code>Happens-Before</code> c，推导出a <code>Happens-Before</code> d。</li>
+<li>管程锁规则<br>对一个锁的解锁操作 Happens-Before 于后续对这个锁的<strong>加锁</strong>操作。要彻底理解这个规则需要知道什么是管程，这个之后再讲，现在只需要知道这个规则是针对<code>synchronized</code>关键字，可以理解为，当一个线程离开了<code>synchronized</code>代码块后，另一个线程进入<code>synchronized</code>代码块可以看到之前线程对代码块内变量的修改。</li>
+<li>线程启动规则<br>主线程 A 启动子线程 B 后，子线程 B 能够看到主线程在启动子线程 B 前的操作。也就是说，如果线程 A 调用线程 B 的 start() 方法（即在线程 A 中启动线程 B），那么该 start() 操作<code>Happens-Before</code>于线程 B 中的任意操作。</li>
+<li>线程结束规则<br>线程中任何操作都<code>Happens-Before</code>其他线程检测到该线程已经结束之前。比如如果在线程 A 中，调用线程 B 的 join() 并成功返回或者调用isAlive() 返回false，那么线程 B 中的任意操作 <code>Happens-Before</code>于该调用操作的返回。</li>
+<li>中断规则<br>对线程interrupt()方法的调用先行发生于被中断线程的代码检测到中断事件的发生，可以通过Thread.interrupted()方法检测到是否有中断发生。</li>
+<li>终结器规则<br>一个对象的初始化完成(构造函数执行结束)先行发生于它的finalize()方法的开始。</li>
+</ol>
+<p>通过这八项<code>Happens-Before</code>规则，我们就可以保证我们对共享对象的修改能够被其他线程看见啦，一些跟这相关的面试题的答案自然而然就围绕这几项规则了。比如：有一个共享变量 abc，在一个线程里设置了 abc 的值 abc=3，有哪些办法可以让其他线程能够看到abc==3？<br>我们可以通过在设置了 abc 的值之后再赋值一个<code>volatile</code>变量通过规则2、3“强刷”；或者我们可以直接声明 abc为<code>volatile</code>变量；再或者加<code>synchronized</code>；再或者A线程启动后，使用A.JOIN()方法来完成运行，后续线程再启动之类的运用各种规则都可以实现我们的目的~</p>
+<h2 id="volatile"><a href="#volatile" class="headerlink" title="volatile"></a>volatile</h2><p>美音读作[ˈvɑːlətl]，意思是易变的; 无定性的; 无常性的; 可能急剧波动的。它想表达的是告诉编译器，对这个变量的读写，不能使用 CPU 缓存，必须从内存中读取或者写入。注意这只是它想表达的语义，不是实现原理。<br>volatile能保证单个变量的<strong>可见性</strong>，并且通过禁止指令重排序保障<strong>有序性</strong>，不能保证原子性。volatile具体的实现原理是通过内存屏障，感兴趣的可以看一看<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/DiEftiV_kTOlR4YmD4pggg">这篇文章</a>。</p>
+<h2 id="final"><a href="#final" class="headerlink" title="final"></a>final</h2><p>volatile表达的是这个变量非常的异变，所以告诉编译器禁用缓存和指令重排序。那如果一个变量生而不变，那么我们可以将它声明为final，这样就相当于告诉编译器，这个变量你可以随便优化~<br>当然，生而不变的前提是正确的“生”，例如上面双重检查的例子，如果变量在构造函数构造过程中有问题，那也是不行的。但是只要final变量没有在构造函数中“逸出”，那么<code>final</code>就能保证<strong>可见性</strong>。</p>
+<h2 id="synchronized"><a href="#synchronized" class="headerlink" title="synchronized"></a>synchronized</h2><p><code>synchronized</code>关键字由于管程锁规则的原因，能保证<strong>可见性和有序性</strong>，但是要注意，<code>synchronized</code>作为锁的实现，它要保护的资源是它所锁住的对象，如果要使用一个锁保护多个资源，那么就需要将对多个资源的访问也都上同一个锁，才能保证其可见性和有序性。例如上面双重检查的例子，instance属性的访问并没有被同一个锁所保护，因此<code>synchronized</code>并不能保证instance属性的有序性。</p>
+<h1 id="怎样解决原子性问题"><a href="#怎样解决原子性问题" class="headerlink" title="怎样解决原子性问题"></a>怎样解决原子性问题</h1><p>上面说了JMM主要解决的是可见性和有序性，那么原子性怎么解决呢？我们知道造成原子性的根源在于线程切换，Java的线程在JDK1.1之后使用的就是Native线程实现了，因此线程切换也就基于CPU中断。显而易见的方案就是禁止CPU中断，禁止CPU中断意味着操作系统不会重新调度线程，获得CPU使用权的线程就可以不间断地执行。这种方案针对只修改一个对象的值是可行的，但是如果应用场景需要一个更大范围的原子性保证，比如对多个属性操作的情况下保证原子性，那需要怎么办呢？  </p>
+<p>因此，原子性的本质不是多个操作不可分割，不可分割只是外在表现，其本质是多个资源间有一致性的要求，<strong>操作的中间状态对外不可见</strong>。所以解决原子性问题，是要<strong>保证中间状态对外不可见</strong>。  </p>
+<p>所谓中间状态对外不可见是指，如果一个线程正在进行一个原子操作，这个原子操作所涉及的资源在这个原子操作的过程中其他线程是不能访问（包括读取和修改）的。这就需要保证对这些资源的访问，<strong>在同一时刻只能有一个线程在进行</strong>。这种特性叫做互斥（mutex）。<br>实现互斥，自然想到的就是锁，我们把一段需要互斥执行的代码称为<strong>临界区</strong>。线程在进入临界区之前，首先尝试加锁 lock()，如果成功，则进入临界区，此时我们称这个线程持有锁；否则呢就等待，直到持有锁的线程解锁；持有锁的线程执行完临界区的代码后，执行解锁 unlock()。<br>使用锁进行互斥操作时，始终要在心中明确的一件事就是，<strong>锁的是什么，要保护的又是什么</strong>！受保护资源和锁之间的关联关系是 N:1 的关系。互斥锁实际上是一把“建议锁”，或者“协同锁”。建议程序中有多线程访问共享资源的时候使用该机制，如果有线程不按规则来访问数据，依然会造成数据混乱。<br><code>synchronized</code>就是Java中互斥锁的实现，因此<code>synchronized</code>能保证原子性。那我们再转念一想，对这些资源的访问，在同一时刻只能有一个线程在进行。那么可见性和有序性的问题自然也就不存在。因此互斥也就间接地解决了可见性和有序性。</p>
+<h1 id="管程"><a href="#管程" class="headerlink" title="管程"></a>管程</h1><p>通过上面的介绍我们知道，我们的程序通过遵守一定的机制，使用<code>synchronized</code>就能解决并发编程中的3种问题，可见性、原子性、有序性。<br>在刚接触<code>synchronized</code>关键字，第一次看到wait()、notify()、notifyAll()这几个方法时，我是懵的，尤其是碰到比如sleep()和wait()方法的区别这种面试题的时候只能死记硬背。其实这是因为不了解底层的并发编程模型，Java使用管程来解决并发问题，包括对象的重量级锁实现，以及众多JUC包的实现基础，AQS。<br>如果了解Java对象的内存布局的话，那么一定知道每个对象都有一个与之关联的Monitor对象，这个Monitor对象就代表这个对象的锁。这个Monitor好多文章都翻译为监视器，每次看到我都觉得很别扭，如果学习过操作系统的话，操作系统领域一般都会翻译为管程。我个人觉得还是管程要更好一点。<br>所谓管程，指的是<strong>管理共享变量以及对共享变量的操作过程</strong>，让他们支持并发。翻译为Java领域的语言，就是管理类的成员变量和成员方法，让这个类是线程安全的。  </p>
+<p>在并发编程领域，有两大核心问题：一个是<strong>互斥</strong>，即同一时刻只允许一个线程访问共享资源；另一个是<strong>同步</strong>，即线程之间如何通信、协作。这两大问题，管程都是能够解决的。<br>Java管程的实现参考的是MESA模型。我们先来看看MESA模型是怎样解决<strong>互斥</strong>的。解决互斥问题的思路很简单，就是<strong>将共享变量及其对共享变量的操作统一封装起来</strong>。</p>
+<img src="/2020/08/02/java/concurrenttheory/monitor.png" class="">
+<p>图中最外层的框就代表封装的意思。框的上面只有一个入口，并且在入口旁边还有一个入口等待队列。当多个线程同时试图进入管程内部时，只允许一个线程进入，其他线程则在入口等待队列中等待。管程里还引入了<strong>条件变量</strong>的概念，而且每个条件变量都对应有一个等待队列，图中条件变量 A 和条件变量 B 分别都有自己的等待队列。<br>那<strong>条件变量</strong>和<strong>条件变量等待队列</strong>的作用是什么呢？其实就是解决线程<strong>同步</strong>问题。<br>这里以实现一个线程安全的阻塞队列为例。一个线程安全的阻塞队列要保护的共享变量V就是一个数组，条件A是数组不为空，条件B是数组未满。我们将数组以及对数组元素的增删操作全部封装起来。那么当一个线程A执行出队操作时，首先它需要进入入口，如果入口内已经有其他线程在执行操作，那么当前线程就需要在入口等待队列排队。当线程A进入了入口开始执行出队操作，那么首先需要校验是否满足条件A也就是数组不为空，如果不满足，那么线程A就到条件A的等待队列中等待，此时管程允许其他线程进入。<br>加入另外一个线程B顺利执行了入队操作，那么线程B需要通知在条件A的等待队列中等待的线程，现在条件A已经满足啦。此时等待的线程A被唤醒后，重新回到入口等待队列，等待进入管程，进而成功执行出队操作。<br>通过上述流程，管程保证了，同一时刻管程内只有一个线程在执行，同时通过条件变量及对应的等待队列实现了线程间的通信与协作。</p>
+<h2 id="synchronized实现原理"><a href="#synchronized实现原理" class="headerlink" title="synchronized实现原理"></a>synchronized实现原理</h2><p>Java 参考了 MESA 模型，语言内置的管程（synchronized）对 MESA 模型进行了精简。MESA 模型中，条件变量可以有多个，Java 语言内置的管程里只有一个条件变量。线程进入synchronized代码块，开始执行逻辑，相当于进入管程，管程内的线程通过调用wait()进入唯一的条件变量对应的等待队列，管程内的线程通过的调用notify()或者notifyAll()唤醒条件变量等待队列中的线程，重新竞争锁（要不要重新进入入口等待丢列看具体的锁实现）。</p>
+<img src="/2020/08/02/java/concurrenttheory/synchronized.webp" class="">
+<p>现在再看一些面试题，比如为什么wait()必须在<code>synchronized</code>代码块内执行，或者sleep()和wait()有什么区别的时候知道怎么回答了吧。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/xidongyu/p/10891303.html">Java中的管程</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzI3ODA0ODkwNA==&mid=2247483680&idx=1&sn=18a73ea417d299de1a09640d56bd2489&scene=21#wechat_redirect">一个synchronized跟面试官扯了半个小时</a></li>
+</ul>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/concurrent/"># concurrent</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2021/01/14/springboot/features/">Spring Boot特性</a>
+            
+            
+            <a class="next" rel="next" href="/2020/07/05/mysql/b+Index/">B+树索引</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>
