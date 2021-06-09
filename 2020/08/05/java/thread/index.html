@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>Java与线程 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Java与线程</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">八月 5, 2020</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/java/">java</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>并发不一定需要依赖多线程，但是在 Java 领域，实现并发程序的主要手段就是多线程。</p>
+<h1 id="线程的实现"><a href="#线程的实现" class="headerlink" title="线程的实现"></a>线程的实现</h1><p>线程是比进程更轻量级的调度执行单位，线程的引入，可以把一个进程的资源分配和执行调度分开，各个线程既可以共享进程资源（内存地址、文件 I/ O 等），又可以独立调度。目前，线程是Java里进行处理器资源调度的最基本单位。  </p>
+<p>实现线程主要有三种方式：使用内核线程实现（1： 1 实现），使用用户线程实现（1： N 实现），使用用户线程加轻量级进程混合实现（N： M 实现）。Java中的线程实现在JDK1.2之前是使用的“绿色线程”，可以看作是用户线程的实现，它的好处在于，不需要系统内核的支持，缺点也在于没有系统内核的支持，如果进程中有某个线程进行了某些耗时长的操作，会阻塞整个进程。从JDK1.3开始，Java线程的实现采用的是LWP(轻量级进程)，即内核线程实现（1： 1 实现）。线程的调度交给操作系统，但是这种方式的缺点在于线程消耗资源太大了，例如在linux上，一个线程默认的栈大小是1M，单机创建几万个线程就有点吃力了。所以后来在编程语言的层面上，就出现了协程这个东西。</p>
+<h1 id="Java-中线程的生命周期"><a href="#Java-中线程的生命周期" class="headerlink" title="Java 中线程的生命周期"></a>Java 中线程的生命周期</h1><p>Java语言定义了6种线程状态：</p>
+<ol>
+<li>NEW（初始化状态）</li>
+<li>RUNNABLE（可运行 / 运行状态）</li>
+<li>BLOCKED（阻塞状态）</li>
+<li>WAITING（无时限等待）</li>
+<li>TIMED_WAITING（有时限等待）</li>
+<li>TERMINATED（终止状态）</li>
+</ol>
+<p>但其实在操作系统层面，Java 线程中的 BLOCKED、WAITING、TIMED_WAITING 是一种状态即休眠状态，也就是说只要 Java 线程处于这三种状态之一，那么这个线程就<strong>永远</strong>没有 CPU 的使用权。</p>
+<img src="/2020/08/05/java/thread/thread-cycle.png" class="">
+<p>Java线程的各种状态转化如下图：</p>
+<img src="/2020/08/05/java/thread/thread-cycle-transfer.png" class="">
+<p><strong>注意：</strong><br>上图中是有一处错误的！从<strong>RUNNABLE</strong>到<strong>BLOCKED</strong>的转换只有一种可能，就是线程等待 synchronized 的隐式锁。线程调用阻塞式 API，比如以阻塞方式读文件的时候，在操作系统层面，线程是会转换到休眠状态的，但是在 JVM 层面，Java 线程的状态<strong>不会</strong>发生变化，也就是说 Java 线程的状态会依然保持 RUNNABLE 状态。<br>我们平时所谓的 Java 在调用阻塞式 API 时，线程会阻塞，指的是<strong>操作系统线程</strong>的状态，并不是 Java 线程的状态。  </p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li>周志明. 深入理解Java虚拟机：JVM高级特性与最佳实践（第3版）</li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzI3ODA0ODkwNA==&mid=2247484053&idx=1&sn=93a4ba52f33688ae794ce60ef46d5eec&chksm=eb5dbb72dc2a3264c25682ef4ce103ba10897ff15955f48c9202e114f0fb8f300c9c6e0841f7&scene=178&cur_album_id=1690115551995478017#rd">阿里面试官问我Java线程和操作系统线程什么关系</a></li>
+</ul>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/concurrent/"># concurrent</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2020/08/06/java/aqs/">AQS实现原理</a>
+            
+            
+            <a class="next" rel="next" href="/2020/08/02/java/concurrenttheory/">并发编程背景知识</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>
