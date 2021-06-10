@@ -236,7 +236,7 @@
 <li>被中断</li>
 <li>虚假唤醒（spurious wakeup），太底层不用考虑</li>
 </ul>
-<p>基本对应于内置锁的<code>wait()</code>方法。注意！调用此方法时要确保调用线程持有锁，否则会抛出<code>IllegalMonitorStateException</code>异常，<a href="/2020/08/02/java/concurrenttheory/" title="还会在AQS的条件等待队列上放一个“垃圾节点”">还会在AQS的条件等待队列上放一个“垃圾节点”</a>。</p>
+<p>基本对应于内置锁的<code>wait()</code>方法。注意！调用此方法时要确保调用线程持有锁，否则会抛出<code>IllegalMonitorStateException</code>异常，<a href="/2020/08/06/java/aqs/" title="还会在AQS的条件等待队列上放一个“垃圾节点”">还会在AQS的条件等待队列上放一个“垃圾节点”</a>。</p>
 <h3 id="void-awaitUninterruptibly"><a href="#void-awaitUninterruptibly" class="headerlink" title="void awaitUninterruptibly()"></a>void awaitUninterruptibly()</h3><p>此方法与<code>await</code>方法的区别从方法签名上就可以看出来，这个方法不响应中断。如果在这过程中线程被中断了，它并不响应这个中断，只是在该方法返回的时候，该线程的中断标志位将是true, 调用者可以检测这个中断标志位以辅助判断在等待过程中是否发生了中断，以此决定要不要做额外的处理。</p>
 <h3 id="long-awaitNanos-long-nanosTimeout-throws-InterruptedException"><a href="#long-awaitNanos-long-nanosTimeout-throws-InterruptedException" class="headerlink" title="long awaitNanos(long nanosTimeout) throws InterruptedException"></a>long awaitNanos(long nanosTimeout) throws InterruptedException</h3><p>这个方法和<code>await</code>方法类似，不过它支持以纳秒为单位的超时支持。需要注意，这个方法是有<strong>返回值</strong>的！除了发生中断的情况，我们是无法知道<code>awaitNanos</code>是由于超时还是被其他线程唤醒的。这时需要通过返回值进行判断，返回值代表离约定的超时时间还有多久，如果为正值说明是被其他线程唤醒的，否则是超时造成的。</p>
 <h3 id="boolean-await-long-time-TimeUnit-unit-throws-InterruptedException"><a href="#boolean-await-long-time-TimeUnit-unit-throws-InterruptedException" class="headerlink" title="boolean await(long time, TimeUnit unit) throws InterruptedException"></a>boolean await(long time, TimeUnit unit) throws InterruptedException</h3><p>这个方法的返回值为boolean类型，如果是true说明是被其他线程唤醒的，否则是超时。</p>
@@ -266,7 +266,7 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2021/01/14/springboot/features/">Spring Boot特性</a>
+                <a class="prev" rel="prev" href="/2020/08/08/java/reentrantlock/">ReentrantLock 实现原理</a>
             
             
             <a class="next" rel="next" href="/2020/08/06/java/aqs/">AQS实现原理</a>
