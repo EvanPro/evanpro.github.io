@@ -285,7 +285,12 @@
 <h4 id="如果从线程被唤醒，到线程获取到锁这段过程中发生过中断，该怎么处理？"><a href="#如果从线程被唤醒，到线程获取到锁这段过程中发生过中断，该怎么处理？" class="headerlink" title="如果从线程被唤醒，到线程获取到锁这段过程中发生过中断，该怎么处理？"></a>如果从线程被唤醒，到线程获取到锁这段过程中发生过中断，该怎么处理？</h4><p>中断对于当前线程只是个建议，由当前线程决定怎么对其做出处理。在<code>acquireQueued</code>方法中，我们对中断是不响应的，只是简单的记录抢锁过程中的中断状态，并在抢到锁后将这个中断状态返回，交于上层调用的函数处理，而这里“上层调用的函数”就是我们的<code>await</code>方法。那么await()方法是怎么对待这个中断的呢？这取决于：<strong>中断发生时，线程是否已经被signal过？</strong><br>这部分内容过于复杂，目前我还没有消化好，有兴趣的可以看看<a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000016462281">这篇文章</a>，分析的非常精彩！<br>最后上一张处理中断的逻辑图：</p>
 <img src="/2020/08/06/java/aqs/interrupt.png" class="">
 
-
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>通过这么长的分析，我们可以看出，我们使用AQS一定是通过实现<code>try*</code>的方式，那么在这些方法中我们需要做什么呢？</p>
+<ul>
+<li>通过state，定义怎样可以进入和离开管程，也就是获取锁和释放锁</li>
+<li>公平锁、非公平锁，也就是当一个线程不在同步队列中时，想要获取锁是可以直接抢占，还是要入队</li>
+<li>保证执行<code>await</code>、<code>release</code>等方法的线程已经持有了锁</li>
+</ul>
 <h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
 <li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/y_e3ciU-hiqlb5vseuOFyw">1.5w字，30图带你彻底掌握 AQS！</a></li>
 <li><a target="_blank" rel="noopener" href="https://www.zhihu.com/question/50724462/answer/123776334">Java AQS unparkSuccessor 方法中for循环从tail开始而不是head的疑问？</a></li>
@@ -317,7 +322,7 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2021/01/14/springboot/features/">Spring Boot特性</a>
+                <a class="prev" rel="prev" href="/2020/08/08/java/lock/">显式锁实现-Lock 和 Condtion</a>
             
             
             <a class="next" rel="next" href="/2020/08/05/java/thread/">Java与线程</a>

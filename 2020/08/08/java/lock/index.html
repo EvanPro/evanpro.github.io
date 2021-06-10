@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>显式锁实现-Lock 和 Condtion | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">显式锁实现-Lock 和 Condtion</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">八月 8, 2020</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/java/">java</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>Java显式锁对应于Java内置锁<code>synchronized</code>，它们实现的理论基础都是管程的MESA模型，通过管程解决了互斥和同步。那显式锁和内置锁相比带来了哪些好处呢？  </p>
+<p>先说获取锁的操作。使用<code>synchronized</code>获取锁的时候，如果没有成功，线程是阻塞的，进入BLOCKED状态（Java线程状态）。一旦发生死锁，阻塞的线程再也没有机会醒来。针对这种情况，使用显式锁可以拓展我们获取锁的方式：</p>
+<ul>
+<li>能够响应中断：能够响应中断是指当线程阻塞地获取锁时，我们可以给它传递中断信号<code>Thread.interrupt()</code>，这时线程可以抛出<code>InterruptedException</code>异常，跳出对锁的等待。</li>
+<li>支持超时：除了让线程可以响应中断，我们还可以设置获取锁的最长等待时间，当超时时，报告超时，退出对锁的获取。</li>
+<li>非阻塞地获取锁：如果尝试获取锁失败，并不进入阻塞状态，而是直接返回。</li>
+</ul>
+<p>再说同步，<code>synchronized</code>的同步是靠<code>wait</code>、<code>notify</code>、<code>notifyAll</code>这三个方法实现，但是隐含的条件是只有一个条件变量，再一些需要多个条件变量的场景，比如<code>BlockingQueue</code>就不适用了。使用显式锁是可以支持多个条件变量的。  </p>
+<p>除了上述这些，显式锁还拓展了锁的策略以及公平性。<code>synchronized</code>是标准的互斥锁，属于抢占式加锁，一次只有一个线程可以获取锁，所有对共享资源的访问都需要先获取锁。而这种策略过于保守，在很多场景下应该允许并发访问共享资源，比如读写锁，显式锁是支持更宽松的锁策略的。公平性来说，<code>synchronized</code>仅支持非公平锁，而显式锁支持公平锁及非公平锁。  </p>
+<h1 id="Lock"><a href="#Lock" class="headerlink" title="Lock"></a>Lock</h1><p>JDK1.5提供的<code>Lock</code>接口就是显式锁的定义。它的几个方法就涵盖了各种获取锁的方式：</p>
+<img src="/2020/08/08/java/lock/Lock.png" class="">
+<h3 id="void-lock"><a href="#void-lock" class="headerlink" title="void lock()"></a>void lock()</h3><p>提供与内置锁一样的语义，阻塞式获取锁，不响应中断。不同的是当获取锁失败时，内置锁的线程的状态是<code>BLOCKED</code>,此方法的线程状态是<code>WAITING</code>。典型用法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Lock l = ...;</span><br><span class="line">l.lock();</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">  <span class="comment">// access the resource protected by this lock</span></span><br><span class="line">&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">  l.unlock();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="void-lockInterruptibly-throws-InterruptedException"><a href="#void-lockInterruptibly-throws-InterruptedException" class="headerlink" title="void lockInterruptibly() throws InterruptedException"></a>void lockInterruptibly() throws InterruptedException</h3><p>阻塞式获取锁，与上面方法不同的是可以响应中断，被中断时抛出<code>InterruptedException</code>。所以此方法执行后要么成功获取锁，要么走<code>InterruptedException</code>异常分支。</p>
+<h3 id="boolean-tryLock"><a href="#boolean-tryLock" class="headerlink" title="boolean tryLock()"></a>boolean tryLock()</h3><p>非阻塞式获取锁，成功获取锁返回true，不成功立即返回false。经典用法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Lock lock = ...;</span><br><span class="line"><span class="keyword">if</span> (lock.tryLock()) &#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// manipulate protected state</span></span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    lock.unlock();</span><br><span class="line">  &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  <span class="comment">// perform alternative actions</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="boolean-tryLock-long-time-TimeUnit-unit-throws-InterruptedException"><a href="#boolean-tryLock-long-time-TimeUnit-unit-throws-InterruptedException" class="headerlink" title="boolean tryLock(long time, TimeUnit unit) throws InterruptedException"></a>boolean tryLock(long time, TimeUnit unit) throws InterruptedException</h3><p>此方法虽然方法签名和非阻塞式获取锁，但它不完全是非阻塞地。如果线程没有成功获取锁，那么线程会进入阻塞状态（WAITING）直至以下三种情况之一（注意先后顺序）：</p>
+<ul>
+<li>获取锁</li>
+<li>被中断</li>
+<li>经过指定的等待时间</li>
+</ul>
+<p>如果由于等待超时线程被唤醒，此方法返回<code>false</code>，而不是抛出<code>TimeoutException</code>之类的异常。</p>
+<h3 id="void-unlock"><a href="#void-unlock" class="headerlink" title="void unlock()"></a>void unlock()</h3><p>解锁操作，调用此方法前，要保证当前线程是锁的持有者，否则此方法可能会抛unchecked异常。</p>
+<h3 id="Condition-newCondition"><a href="#Condition-newCondition" class="headerlink" title="Condition newCondition()"></a>Condition newCondition()</h3><p>返回绑定到此Lock实例的新Condition实例。支持一对多。</p>
+<h1 id="Condition"><a href="#Condition" class="headerlink" title="Condition"></a>Condition</h1><img src="/2020/08/08/java/lock/Condition.png" class="">
+<h3 id="signal-signalAll"><a href="#signal-signalAll" class="headerlink" title="signal()/signalAll()"></a>signal()/signalAll()</h3><p>唤醒方面，Condition与内置锁的<code>notify()</code>和<code>signalAll()</code>没有啥区别。</p>
+<h3 id="void-await-throws-InterruptedException"><a href="#void-await-throws-InterruptedException" class="headerlink" title="void await() throws InterruptedException"></a>void await() throws InterruptedException</h3><p>在方法签名上可以看到，这个方法抛出<code>InterruptedException</code>异常，代表这个方法是支持中断的。因此此方法返回的一定是发生了以下几种情况：</p>
+<ul>
+<li>被其他线程signal()/signalAll()</li>
+<li>被中断</li>
+<li>虚假唤醒（spurious wakeup），太底层不用考虑</li>
+</ul>
+<p>基本对应于内置锁的<code>wait()</code>方法。注意！调用此方法时要确保调用线程持有锁，否则会抛出<code>IllegalMonitorStateException</code>异常，<a href="/2020/08/02/java/concurrenttheory/" title="还会在AQS的条件等待队列上放一个“垃圾节点”">还会在AQS的条件等待队列上放一个“垃圾节点”</a>。</p>
+<h3 id="void-awaitUninterruptibly"><a href="#void-awaitUninterruptibly" class="headerlink" title="void awaitUninterruptibly()"></a>void awaitUninterruptibly()</h3><p>此方法与<code>await</code>方法的区别从方法签名上就可以看出来，这个方法不响应中断。如果在这过程中线程被中断了，它并不响应这个中断，只是在该方法返回的时候，该线程的中断标志位将是true, 调用者可以检测这个中断标志位以辅助判断在等待过程中是否发生了中断，以此决定要不要做额外的处理。</p>
+<h3 id="long-awaitNanos-long-nanosTimeout-throws-InterruptedException"><a href="#long-awaitNanos-long-nanosTimeout-throws-InterruptedException" class="headerlink" title="long awaitNanos(long nanosTimeout) throws InterruptedException"></a>long awaitNanos(long nanosTimeout) throws InterruptedException</h3><p>这个方法和<code>await</code>方法类似，不过它支持以纳秒为单位的超时支持。需要注意，这个方法是有<strong>返回值</strong>的！除了发生中断的情况，我们是无法知道<code>awaitNanos</code>是由于超时还是被其他线程唤醒的。这时需要通过返回值进行判断，返回值代表离约定的超时时间还有多久，如果为正值说明是被其他线程唤醒的，否则是超时造成的。</p>
+<h3 id="boolean-await-long-time-TimeUnit-unit-throws-InterruptedException"><a href="#boolean-await-long-time-TimeUnit-unit-throws-InterruptedException" class="headerlink" title="boolean await(long time, TimeUnit unit) throws InterruptedException"></a>boolean await(long time, TimeUnit unit) throws InterruptedException</h3><p>这个方法的返回值为boolean类型，如果是true说明是被其他线程唤醒的，否则是超时。</p>
+<h3 id="boolean-awaitUntil-Date-deadline-throws-InterruptedException"><a href="#boolean-awaitUntil-Date-deadline-throws-InterruptedException" class="headerlink" title="boolean awaitUntil(Date deadline) throws InterruptedException"></a>boolean awaitUntil(Date deadline) throws InterruptedException</h3><p>此方法与<code>await(long time, TimeUnit unit)</code>方法类似，不同的是超时时间是绝对日期。</p>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/concurrent/"># concurrent</a>
+                    
+                        <a href="/tags/juc/"># juc</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2021/01/14/springboot/features/">Spring Boot特性</a>
+            
+            
+            <a class="next" rel="next" href="/2020/08/06/java/aqs/">AQS实现原理</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>
