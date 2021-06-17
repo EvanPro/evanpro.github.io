@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>Redis的集群 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Redis的集群</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">九月 2, 2019</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/redis/">redis</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>在<a href="/2019/09/01/redis/high-available/" title="上一篇中">上一篇中</a>，我们知道可以通过主从复制+Sentinel的方式实现高可用。但是副本实例其实是不对外服务的，因此本质上，我们所有的数据都会存在master实例上。而一个实例的内存是有限的，这时就需要进行拓展。一般有两种方案，一种是扩大服务器的内存，一种就是进行数据分片。<br>直接扩大内存的优点在于简单，但是也存在问题。首先内存不能无限扩大，其次，由于RDB的持久化机制是通过fork子进程实现的，在fork的时候是会阻塞Redis主进程的，而fork的用时与数据量是成正比的。所以为了Redis的性能，单实例的内存用量也不宜过大。<br>Redis Cluster是Redis官方提供的数据分片的解决方案。它是去中心化的，每个节点负责整个集群的一部分数据，每个节点并不一定是均分的。这三个节点相互连接组成一个对等的集群，它们之间通过一种特殊的二进制协议相互交互集群信息。<br>Redis Cluster将所有数据划分为<strong>16384</strong>的slots，每个节点负责其中一部分槽位。槽位的信息存储于每个节点中，当 Redis Cluster 的客户端来连接集群时，它也会得到一份集群的槽位配置信息。这样当客户端要查找某个 key 时，可以直接定位到目标节点。<br>为啥是<code>16384</code>呢？主要有三个原因：如果槽位为65536，发送心跳信息的消息头达8k，发送的心跳包过于庞大；redis的集群主节点数量基本不可能超过1000个；槽位越小，节点少的情况下，压缩率高。具体可以看<a target="_blank" rel="noopener" href="https://honeypps.com/backend/why-redis-cluster-use-16384-slots/">这篇文章</a></p>
+<h1 id="槽位定位算法"><a href="#槽位定位算法" class="headerlink" title="槽位定位算法"></a>槽位定位算法</h1><p>Cluster 默认会对 key 值使用 crc16 算法进行 hash 得到一个<code>16 bit</code>的整数值，然后用这个整数值对 16384 进行取模来得到具体槽位。</p>
+<h1 id="槽位迁移感知"><a href="#槽位迁移感知" class="headerlink" title="槽位迁移感知"></a>槽位迁移感知</h1><p>集群中，Redis实例与slot的对应关系并不是一成不变的，当增减实例或者为了负载均衡进行重新分配时，实例之间同步完新的槽位信息后，需要有一种机制让客户端也能感知到这种变化。<br>Cluster 有两个特殊的 error 指令，一个是<code>moved</code>，一个是<code>asking</code>。<br>第一个<code>moved</code>是用来纠正槽位的。如果我们将指令发送到了错误的节点，该节点发现对应的指令槽位不归自己管理，就会将目标节点的地址随同 moved 指令回复给客户端通知客户端去目标节点去访问。这个时候客户端就会<strong>刷新自己的槽位关系表</strong>，然后重试指令，后续所有打在该槽位的指令都会转到目标节点。<br>第二个<code>asking</code>指令和<code>moved</code>不一样，它是用来临时纠正槽位的。如果当前槽位正处于迁移中，指令会先被发送到槽位所在的旧节点，如果旧节点存在数据，那就直接返回结果了，如果不存在，那么它可能真的不存在也可能在迁移目标节点上。所以旧节点会通知客户端去新节点尝试一下拿数据，看看新节点有没有。这时候就会给客户端返回一个<code>asking error</code>携带上目标节点的地址。客户端收到这个<code>asking error</code>后，就会去目标节点去尝试。客户端<strong>不会刷新槽位映射关系表</strong>，因为它只是临时纠正该指令的槽位信息，不影响后续指令。</p>
+<h1 id="Redis-Cluster-主从模式"><a href="#Redis-Cluster-主从模式" class="headerlink" title="Redis Cluster 主从模式"></a>Redis Cluster 主从模式</h1><p>Cluster的高可用也是通过主从复制保证的，如果没有复制机制，那么当某个节点发生故障，那么某个范围的slot就无法再提供服务了，当大多数节点都发生故障，集群将停止运行。<br>Cluster的主从切换不需要Sentinel的支持。</p>
+<h1 id="Redis-集群一致性保证"><a href="#Redis-集群一致性保证" class="headerlink" title="Redis 集群一致性保证"></a>Redis 集群一致性保证</h1><p>Redis Cluster 无法保证<strong>强一致性</strong>。这意味着在某些情况下，Redis Cluster 可能会丢失系统已向客户端确认的写入。Redis Cluster 会丢失写入的第一个原因是因为它使用<strong>异步复制</strong>；另一个原因是可能发生<strong>网络分区</strong>：<br>我们以6个节点集群为例，由A、B、C、A1、B1、C1组成，有3个master和3个slave。还有一个客户端，我们将其称为 Z1。<br>分区发生后，可能在分区的一侧有 A、C、A1、B1、C1，而在另一侧有 B 和 Z1。<br>Z1 仍然能够写入 B，B 将接受其写入。如果分区在很短的时间内恢复，集群将继续正常运行。但是，如果分区持续足够的时间让 B1 在分区的多数侧提升为 master，则 Z1 同时发送给 B 的写入将丢失。<br>为了减轻这种情况造成的数据不一致性，可以配置<strong>节点超时</strong>。节点超时后，主节点被视为发生故障，并且可以由其副本之一替换。类似地，在节点超时后，主节点无法感知大多数其他主节点，它会进入错误状态并停止接受写入。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://redis.io/topics/cluster-tutorial">Redis集群教程</a></li>
+</ul>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5/"># 主从同步</a>
+                    
+                        <a href="/tags/%E9%AB%98%E5%8F%AF%E7%94%A8/"># 高可用</a>
+                    
+                        <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/"># 分布式系统</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2019/09/10/redis/distributed-lock/">Redis分布式锁</a>
+            
+            
+            <a class="next" rel="next" href="/2019/09/01/redis/high-available/">Redis的复制及高可用</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>

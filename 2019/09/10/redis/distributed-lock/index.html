@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>Redis分布式锁 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Redis分布式锁</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">九月 10, 2019</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/redis/">redis</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>我们都知道可以使用Redis实现一个分布式锁。<br>加锁时：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 一条命令保证原子性执行</span><br><span class="line">127.0.0.1:6379&gt; SET lock $uuid EX 10 NX</span><br><span class="line">OK</span><br></pre></td></tr></table></figure>
+<p>解锁时，使用lua脚本保证原子性：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">// 判断锁是自己的，才释放</span><br><span class="line"><span class="keyword">if</span> redis.call(<span class="string">&quot;GET&quot;</span>,KEYS[<span class="number">1</span>]) == ARGV[<span class="number">1</span>]</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">    <span class="keyword">return</span> redis.call(<span class="string">&quot;DEL&quot;</span>,KEYS[<span class="number">1</span>])</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>但是这样的方案解决不了<strong>锁过期</strong>的问题，也就是说如果加锁的进程在解锁之前，锁已经到了过期时间的话，锁就会被释放，从而其他进程就可以获取到锁。分布式锁的互斥性就被打破了。<br>解决这个问题的思路就是<strong>续租</strong>。加锁时，先设置一个过期时间，然后我们开启一个「守护线程」，定时去检测这个锁的失效时间，如果锁快要过期了，操作共享资源还未完成，那么就自动对锁进行「续期」，重新设置过期时间。这个方案已经有了好的实现，<strong>Redisson</strong>。<br>上述的解决方案在单实例Redis中可以很好地发挥作用，如果使用的是Redis集群的话，就会有问题。比如由于Redis的复制是异步的，当master上的锁还没有来的及同步到其他副本上，此时发生主从切换，就会出现锁丢失的情况。<br>针对这种情况，Redis的作者提出了<code>Redlock</code>方案。</p>
+<h1 id="Redlock"><a href="#Redlock" class="headerlink" title="Redlock"></a>Redlock</h1><p>在Redis的分布式环境中，我们假设有N个Redis Master。这些节点<strong>完全互相独立，不存在主从复制或者其他集群协调机制</strong>。<br>为了取到锁，客户端应该执行以下操作：</p>
+<ol>
+<li>获取当前时间戳<strong>T1</strong>，以毫秒为单位。</li>
+<li>依次尝试从N个Master实例使用相同的key和随机值获取锁。当向Redis设置锁时，客户端应该设置一个网络连接和响应超时时间，这个超时时间应该小于锁的失效时间。例如你的锁自动失效时间为10秒，则超时时间应该在5-50毫秒之间。这样可以避免服务器端Redis已经挂掉的情况下，客户端还在死死地等待响应结果。如果服务器端没有在规定时间内响应，客户端应该尽快尝试另外一个Redis实例。</li>
+<li>客户端使用当前时间<strong>T2</strong>-<strong>T1</strong>就得到获取锁使用的时间。当且仅当从大多数的Redis节点都取到锁，并且使用的时间小于锁失效时间时，锁才算获取成功。</li>
+<li>如果取到了锁，key的真正有效时间等于有效时间减去获取锁所使用的时间（步骤3计算的结果）。</li>
+<li>如果因为某些原因，获取锁失败（没有在至少N/2+1个Redis实例取到锁或者取锁时间已经超过了有效时间），客户端应该在所有的Redis实例上进行解锁（即便某些Redis实例根本就没有加锁成功）。</li>
+</ol>
+<p>同样地，<strong>Redisson</strong>也提供了实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">Config config1 = <span class="keyword">new</span> Config();</span><br><span class="line">config1.useSingleServer().setAddress(<span class="string">&quot;redis://192.168.0.1:6379&quot;</span>)</span><br><span class="line">        .setPassword(<span class="string">&quot;afeiblog&quot;</span>).setDatabase(<span class="number">0</span>);</span><br><span class="line">RedissonClient redissonClient1 = Redisson.create(config1);</span><br><span class="line"></span><br><span class="line">Config config2 = <span class="keyword">new</span> Config();</span><br><span class="line">config2.useSingleServer().setAddress(<span class="string">&quot;redis://192.168.0.2:6379&quot;</span>)</span><br><span class="line">        .setPassword(<span class="string">&quot;afeiblog&quot;</span>).setDatabase(<span class="number">0</span>);</span><br><span class="line">RedissonClient redissonClient2 = Redisson.create(config2);</span><br><span class="line"></span><br><span class="line">Config config3 = <span class="keyword">new</span> Config();</span><br><span class="line">config3.useSingleServer().setAddress(<span class="string">&quot;redis://192.168.0.3:6379&quot;</span>)</span><br><span class="line">        .setPassword(<span class="string">&quot;afeiblog&quot;</span>).setDatabase(<span class="number">0</span>);</span><br><span class="line">RedissonClient redissonClient3 = Redisson.create(config3);</span><br><span class="line"></span><br><span class="line">String resourceName = <span class="string">&quot;LOCK_KEY&quot;</span>;</span><br><span class="line"></span><br><span class="line">RLock lock1 = redissonClient1.getLock(resourceName);</span><br><span class="line">RLock lock2 = redissonClient2.getLock(resourceName);</span><br><span class="line">RLock lock3 = redissonClient3.getLock(resourceName);</span><br><span class="line"><span class="comment">// 向3个redis实例尝试加锁</span></span><br><span class="line">RedissonRedLock redLock = <span class="keyword">new</span> RedissonRedLock(lock1, lock2, lock3);</span><br><span class="line"><span class="keyword">boolean</span> isLock;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// isLock = redLock.tryLock();</span></span><br><span class="line">    <span class="comment">// 500ms拿不到锁, 就认为获取锁失败。10000ms即10s是锁失效时间。</span></span><br><span class="line">    isLock = redLock.tryLock(<span class="number">500</span>, <span class="number">10000</span>, TimeUnit.MILLISECONDS);</span><br><span class="line">    System.out.println(<span class="string">&quot;isLock = &quot;</span>+isLock);</span><br><span class="line">    <span class="keyword">if</span> (isLock) &#123;</span><br><span class="line">        <span class="comment">//TODO if get lock success, do something;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    <span class="comment">// 无论如何, 最后都要解锁</span></span><br><span class="line">    redLock.unlock();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>可以看到，<code>Redlock</code>是依赖各个Redis的时钟保持一致。所以这一方案提出后也受到了很多人的质疑，Redis的作者也做出了相应的回应。具体过程很复杂，可以参考参考链接的内容。<br>除了Redis之外，我们还可以使用Zookeeper实现分布式锁，它主要依靠临时节点断开连接自动删除的特性以及watch机制实现。但是性能上还不如Redis。  </p>
+<p>在我们正常的部署场景中，一般只需要一个Redis Cluster，或者一个主从复制 + Sentinel。而这两者都不能承载RedLock的落地，RedLock方案需要专门搭建一套环境。所以，如果不是对分布式锁可靠性有极高的要求（比如金融场景），不太建议使用RedLock方案。  </p>
+<p>所以大部分场景，我都会使用单机版 Redis实现分布式锁。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/s8xjm1ZCKIoTGT3DCVA4aw">深度剖析：Redis分布式锁到底安全吗？看完这篇文章彻底懂了！</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/U1FS437N1rLjh_cq1fMuLg">怎样做可靠的分布式锁，Redlock 真的可行么？</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/CAzi6vEMtRdFve_YDY8efw">分布式锁RedLock，认真看完，请不要有任何疑惑了</a></li>
+<li><a target="_blank" rel="noopener" href="https://redis.io/topics/distlock">Distributed locks with Redis</a></li>
+</ul>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/distributed/"># distributed</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2020/05/06/mq/rabbitmq1/">RabbitMQ初探</a>
+            
+            
+            <a class="next" rel="next" href="/2019/09/02/redis/cluster/">Redis的集群</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>

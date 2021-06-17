@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>Redis的复制及高可用 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Redis的复制及高可用</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">九月 1, 2019</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/redis/">redis</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>Redis无论是单实例还是集群，都可以启用复制（Replication）。Redis的复制模型支持主从复制（master-slave）以及从从复制，也就是说一个副本可以连接到master上也可以连接到其他副本上。  </p>
+<img src="/2019/09/01/redis/high-available/ms.png" class="">
+<p>复制既可以用来实现<strong>可拓展性（scalability）</strong>例如增加副本为了只读查询，也可以用来增强<strong>数据安全性</strong>以及<strong>高可用性</strong>。需要注意的是，从Redis 2.6开始Redis的副本默认支持read-only模式，read-only副本会拒绝所有的写命令，但是这个设计初衷并不是用来将副本暴漏到公网上实现读写分离的，因为一些管理员命令例如<code>DEBUG</code>或者<code>CONFIG</code>在read-only模式下都是可用的。所以如果想要实现读写分离，还是要参考一些<a target="_blank" rel="noopener" href="https://www.cnblogs.com/williamjie/p/11250713.html">解决方案</a>。<br>Redis的复制不会阻塞<code>master</code>，这意味着master在进行复制的同时依然可以对外提供服务。副本端也基本不会因为复制而阻塞，</p>
+<h1 id="复制机制"><a href="#复制机制" class="headerlink" title="复制机制"></a>复制机制</h1><ol>
+<li>当master与副本实例完成连接，master将通过将<strong>命令流（stream of commands）</strong>发送到副本端的方式，更新副本。使其同步master的，客户端写操作，key过期及驱逐和其他改变master数据集的操作。</li>
+<li>当master与副本连接断开，副本会尝试重连master，并执行<strong>部分重同步（partial resynchronization）</strong>：即只找回断联期间丢失部分的命令流。</li>
+<li>当增量同步不成功，会触发<strong>完整重同步（full resynchronization）</strong>。</li>
+</ol>
+<p>Redis默认使用<strong>异步</strong>方式进行复制，但是master不会等待每一个命令都被副本执行才继续发送下一个命令，副本是按周期对收到的数据进行确认（acknowledge ）的。<br>如果master需要保证某些重要的操作必须被准备的复制到副本上，那么可以使用<code>WAIT</code>命令进行阻塞的<strong>同步复制</strong>：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="built_in">wait</span> 1 0</span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br></pre></td></tr></table></figure>
+<p><code>WAIT</code>提供两个参数，第一个参数是从库的数量 N，第二个参数是时间 t，以毫秒为单位。它表示等待<code>WAIT</code>指令之前的所有写操作同步到 N 个从库 (也就是确保 N 个从库的同步没有滞后)，最多等待时间 t。如果时间 t=0，表示无限等待直到 N 个从库同步完成达成一致。<br>假设此时出现了网络分区，<code>WAIT</code>指令第二个参数时间 t=0，主从同步无法继续进行，<code>WAIT</code>指令会永远阻塞，Redis 服务器将丧失可用性。<br>由于Redis的master是异步复制数据到副本中的，同时副本也是异步进行<code>acknowledge</code>的，所以复制都不会阻塞master实例和副本实例对外提供服务。但是，当初始同步完成后，需要删除旧的数据集和加载新的数据集，在这个短暂的时间内，副本实例会阻塞连接进来的请求。</p>
+<h1 id="复制工作原理"><a href="#复制工作原理" class="headerlink" title="复制工作原理"></a>复制工作原理</h1><p>每一个master实例都有一个<strong>replication ID</strong>，它是一个很大的伪随机数。同时每个master还会维护一个偏移量<code>offset</code>，表示哪些同步流已经发送给了副本实例。即使没有副本，master也会维护这个offset。因此&lt;replication ID , offset&gt;的二元组就可以标识数据集的一个具体版本。<br>当副本连接到master（包括第一次或者重连的情况），它会发送<code>PSYNC</code>命令将它持有的老的master replication ID和它们已经处理后的<code>offset</code>发送给master。这样根据<code>offset</code>，master可以只发送增量的部分。如果master实例的buffer空间不足或者master发现传过来的replication ID是旧的，那么就会触发<strong>全量同步（full synchronization）</strong>。<br><strong>全量同步（full synchronization）</strong>的过程是：master执行<code>bgSave</code>生成RDB文件，于此同时master会缓存在此期间新执行的写请求。生成RDB文件后，master将RDB文件传输给副本，副本将其保存在硬盘上，然后加载进内存。随后，master将缓存的命令在发送给副本。  </p>
+<h2 id="关于PSYNC"><a href="#关于PSYNC" class="headerlink" title="关于PSYNC"></a>关于PSYNC</h2><p>在Redis 2.8以前，副本的同步命令是<code>SYNC</code>。<code>PSYNC</code>与<code>SYNC</code>的主要区别就在于<code>PSYNC</code>支持<strong>部分重同步（partial resynchronization）</strong>。什么是部分重同步呢？<br>每一个实例，都有两个replication IDs：main ID和 secondary ID。当一个节点启动称为master的时候（无论是从0开始，还是被晋升的），都会生成一个新的replication ID。当副本连接到这个master上的时候，都会继承这个replication ID。当一个副本晋升为master的时候，既会生成新的replication ID，也会记住原有的replication ID（从老的master那里继承来的），这样当副本连接到这个新的master上的时候，传过来的依然是旧的replication ID，新的master可以根据这个旧的replication ID只重新同步差异的数据而不是全部都重新同步。  </p>
+<h2 id="无盘复制"><a href="#无盘复制" class="headerlink" title="无盘复制"></a>无盘复制</h2><p>从2.8.18开始，Redis支持无盘复制，原有的<strong>全量同步</strong>生成RDB文件需要储存到硬盘上，这是一个很重的IO操作。特别是当系统正在进行AOF的fsync操作时如果发生<strong>全量同步</strong>，fsync将会被推迟执行，这就会严重影响master的服务效率。<br>所谓无盘复制是指master直接通过套接字将RDB内容发送到副本，生成RDB内容是一个遍历的过程，master会一边遍历内存，一边将序列化的内容发送到副本上。</p>
+<h1 id="Sentinel"><a href="#Sentinel" class="headerlink" title="Sentinel"></a>Sentinel</h1><p>有了主从复制机制还不够，当某个节点发生错误时，我们需要有一套自动切换的机制进行主备切换，这就是Sentinel，Sentinel才能为Redis提供真正的高可用。Sentinel本身也是一个分布式系统，使用raft协议保证Sentinel集群的一致性。<br>Sentinel可以看作是Redis客户端的服务发现，它能够自动做主备切换。<br>在非集群的部署情况下，一般都是使用主从复制+Sentinel的方式。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://redis.io/topics/replication">Replication</a></li>
+</ul>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5/"># 主从同步</a>
+                    
+                        <a href="/tags/%E9%AB%98%E5%8F%AF%E7%94%A8/"># 高可用</a>
+                    
+                        <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/"># 分布式系统</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2019/09/02/redis/cluster/">Redis的集群</a>
+            
+            
+            <a class="next" rel="next" href="/2019/08/25/redis/persistence/">Redis的持久化</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>
