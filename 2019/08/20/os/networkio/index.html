@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>网络I/O模型 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">网络I/O模型</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">八月 20, 2019</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>对于一个套接字上的输入操作，第一步通常涉及等待数据从网络中到达。当所等待数据到达时，它被复制到<strong>内核</strong>中的某个缓冲区。第二步就是把数据从<strong>内核缓冲区</strong>复制到<strong>应用进程缓冲区</strong>。<br>Unix 有五种 I/O 模型：</p>
+<ul>
+<li>阻塞式 I/O</li>
+<li>非阻塞式 I/O</li>
+<li>I/O 复用（select 和 poll）</li>
+<li>信号驱动式 I/O（SIGIO）</li>
+<li>异步 I/O（AIO）</li>
+</ul>
+<h1 id="阻塞式-I-O"><a href="#阻塞式-I-O" class="headerlink" title="阻塞式 I/O"></a>阻塞式 I/O</h1><p>应用进程被阻塞，直到数据从内核缓冲区复制到应用进程缓冲区中才返回。进程阻塞期间，其他系统进程正常执行，所以CPU 利用率会比较高。下图中，recvfrom() 用于接收 Socket 传来的数据，并复制到应用进程的缓冲区 buf 中。这里把 recvfrom() 当成系统调用。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">ssize_t</span> <span class="title">recvfrom</span><span class="params">(<span class="keyword">int</span> sockfd, <span class="keyword">void</span> *buf, <span class="keyword">size_t</span> len, <span class="keyword">int</span> flags, struct sockaddr *src_addr, <span class="keyword">socklen_t</span> *addrlen)</span></span>;</span><br></pre></td></tr></table></figure>
+<img src="/2019/08/20/os/networkio/bio.jpg" class="">
+<h1 id="非阻塞式-I-O"><a href="#非阻塞式-I-O" class="headerlink" title="非阻塞式 I/O"></a>非阻塞式 I/O</h1><p>应用进程执行系统调用之后，内核返回一个错误码。应用进程可以继续执行，但是需要不断的执行系统调用来获知 I/O 是否完成，这种方式称为轮询（polling）。由于 CPU 要处理更多的系统调用，因此这种模型的 CPU 利用率<em>比较低</em>。</p>
+<img src="/2019/08/20/os/networkio/nio.jpg" class="">
+<h1 id="I-O-多路复用"><a href="#I-O-多路复用" class="headerlink" title="I/O 多路复用"></a>I/O 多路复用</h1><p>使用<code>select</code>或者<code>poll</code>等待数据，并且可以等待多个套接字中的任何一个变为可读，<strong>这一过程会被阻塞</strong>。当某一个套接字可读时返回，之后再使用 recvfrom 把数据从内核复制到进程中。<br>它可以让单个进程具有处理多个 I/O 事件的能力。又被称为 Event Driven I/O，即事件驱动 I/O。<br>如果一个 Web 服务器没有 I/O 复用，那么每一个 Socket 连接都需要创建一个线程去处理。如果同时有几万个连接，那么就需要创建相同数量的线程。相比于多进程和多线程技术，I/O 复用不需要进程线程创建和切换的开销，系统开销更小。</p>
+<img src="/2019/08/20/os/networkio/mutiplexing.jpg" class="">
+<h1 id="信号驱动-I-O"><a href="#信号驱动-I-O" class="headerlink" title="信号驱动 I/O"></a>信号驱动 I/O</h1><p>应用进程使用 sigaction 系统调用，内核立即返回，应用进程可以继续执行，也就是说等待数据阶段应用进程是非阻塞的。内核在数据到达时向应用进程发送 SIGIO 信号，应用进程收到之后在信号处理程序中调用 recvfrom 将数据从内核复制到应用进程中。<br>相比于非阻塞式 I/O 的轮询方式，信号驱动 I/O 的 CPU 利用率更高。</p>
+<img src="/2019/08/20/os/networkio/signal.jpg" class="">
+<h1 id="异步-I-O"><a href="#异步-I-O" class="headerlink" title="异步 I/O"></a>异步 I/O</h1><p>应用进程执行 aio_read 系统调用会立即返回，应用进程可以继续执行，不会被阻塞，内核会在所有操作完成之后向应用进程发送信号。<br>异步 I/O 与信号驱动 I/O 的区别在于，异步 I/O 的信号是通知应用进程 I/O 完成，而信号驱动 I/O 的信号是通知应用进程可以开始 I/O。</p>
+<img src="/2019/08/20/os/networkio/asyn.jpg" class="">
+<h1 id="五大-I-O-模型比较"><a href="#五大-I-O-模型比较" class="headerlink" title="五大 I/O 模型比较"></a>五大 I/O 模型比较</h1><ul>
+<li>同步 I/O：将数据从内核缓冲区复制到应用进程缓冲区的阶段（第二阶段），应用进程会阻塞。</li>
+<li>异步 I/O：第二阶段应用进程不会阻塞。</li>
+</ul>
+<p>同步 I/O 包括阻塞式 I/O、非阻塞式 I/O、I/O 复用和信号驱动 I/O ，它们的主要区别在第一个阶段。非阻塞式 I/O 、信号驱动 I/O 和异步 I/O 在第一阶段不会阻塞。</p>
+<img src="/2019/08/20/os/networkio/diff.jpg" class="">
+
+<h1 id="细说-I-O-多路复用"><a href="#细说-I-O-多路复用" class="headerlink" title="细说 I/O 多路复用"></a>细说 I/O 多路复用</h1><p>select/poll/epoll 都是 I/O 多路复用的具体实现，select 出现的最早，之后是 poll，再是 epoll。</p>
+<h2 id="select"><a href="#select" class="headerlink" title="select"></a>select</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">select</span><span class="params">(<span class="keyword">int</span> n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>select 允许应用程序监视一组文件描述符，等待一个或者多个描述符成为就绪状态，从而完成 I/O 操作。</p>
+<ul>
+<li>fd_set 使用数组实现，数组大小使用 FD_SETSIZE 定义，所以只能监听少于 FD_SETSIZE 数量的描述符。有三种类型的描述符类型：readset、writeset、exceptset，分别对应读、写、异常条件的描述符集合。</li>
+<li>timeout 为超时参数，调用 select 会一直<strong>阻塞</strong>直到有描述符的事件到达或者等待的时间超过 timeout。</li>
+<li>成功调用返回结果大于 0，出错返回结果为 -1，超时返回结果为 0。</li>
+</ul>
+<p>用伪代码示范下大致流程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> fd = <span class="comment">/* file descriptor */</span></span><br><span class="line"></span><br><span class="line">fd_set rfds;</span><br><span class="line">FD_ZERO(&amp;rfds);</span><br><span class="line">FD_SET(fd, &amp;rfds)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> ( ; ; ) &#123;</span><br><span class="line">    select(fd+<span class="number">1</span>, &amp;rfds, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">if</span> (FD_ISSET(fd, &amp;rfds)) &#123;</span><br><span class="line">        <span class="comment">/* file descriptor `fd` becomes readable */</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>初始化一个可读的 fd_set 集合，保存需要监控可读性的 FD；</li>
+<li>使用 FD_SET 将 fd 加入 rfds；</li>
+<li>调用 select 方法监控 rfds 中的 FD 是否可读；</li>
+<li>当 select 返回时，检查 FD 的状态并完成对应的操作。</li>
+</ol>
+<h2 id="poll"><a href="#poll" class="headerlink" title="poll"></a>poll</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">poll</span><span class="params">(struct pollfd *fds, <span class="keyword">unsigned</span> <span class="keyword">int</span> nfds, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>poll 的功能与 select 类似，也是等待一组描述符中的一个成为就绪状态。poll 中的描述符是 pollfd 类型的数组。</p>
+<h2 id="比较"><a href="#比较" class="headerlink" title="比较"></a>比较</h2><p>select 和 poll 的功能基本相同，不过在一些实现细节上有所不同。</p>
+<ul>
+<li>select 会修改描述符，而 poll 不会；</li>
+<li>select 的描述符类型使用数组实现，FD_SETSIZE 大小默认为 1024，因此默认只能监听少于 1024 个描述符。如果要监听更多描述符的话，需要修改 FD_SETSIZE 之后重新编译；而 poll 没有描述符数量的限制；</li>
+<li>poll 提供了更多的事件类型，并且对描述符的重复利用上比 select 高。</li>
+<li>如果一个线程对某个描述符调用了 select 或者 poll，另一个线程关闭了该描述符，会导致调用结果不确定。</li>
+</ul>
+<p>select 和 poll 速度都比较慢，每次调用都需要将全部描述符从应用进程缓冲区复制到内核缓冲区。</p>
+<h2 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_create</span><span class="params">(<span class="keyword">int</span> size)</span></span>;</span><br><span class="line">int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)；</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event * events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>epoll_ctl() 用于向内核注册新的描述符或者是改变某个文件描述符的状态。已注册的描述符在内核中会被维护在一棵红黑树上，通过回调函数内核会将 I/O 准备好的描述符加入到一个链表中管理，进程调用 epoll_wait() 便可以得到事件完成的描述符。<br>从上面的描述可以看出，epoll 只需要将描述符从进程缓冲区向内核缓冲区拷贝一次，并且进程不需要通过轮询来获得事件完成的描述符。<br>epoll 仅适用于 Linux OS。<br>epoll 比 select 和 poll 更加灵活而且没有描述符数量限制。<br>epoll 对多线程编程更有友好，一个线程调用了 epoll_wait() 另一个线程关闭了同一个描述符也不会产生像 select 和 poll 的不确定情况。</p>
+<h3 id="工作模式"><a href="#工作模式" class="headerlink" title="工作模式"></a>工作模式</h3><p>epoll 的描述符事件有两种触发模式：LT（level trigger 水平触发）和 ET（edge trigger边缘触发）。</p>
+<h4 id="LT"><a href="#LT" class="headerlink" title="LT"></a>LT</h4><p>当 epoll_wait() 检测到描述符事件到达时，将此事件通知进程，进程可以不立即处理该事件，下次调用 epoll_wait() 会再次通知进程。是默认的一种模式，并且同时支持 Blocking 和 No-Blocking。</p>
+<h4 id="ET"><a href="#ET" class="headerlink" title="ET"></a>ET</h4><p>和 LT 模式不同的是，通知之后进程必须立即处理事件，下次再调用 epoll_wait() 时不会再得到事件到达的通知。<br>很大程度上减少了 epoll 事件被重复触发的次数，因此效率要比 LT 模式高。只支持 No-Blocking，以避免由于一个文件句柄的阻塞读/阻塞写操作把处理多个文件描述符的任务饿死。</p>
+<h2 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h2><p>很容易产生一种错觉认为只要用 epoll 就可以了，select 和 poll 都已经过时了，其实它们都有各自的使用场景。</p>
+<h3 id="select-应用场景"><a href="#select-应用场景" class="headerlink" title="select 应用场景"></a>select 应用场景</h3><p>select 的 timeout 参数精度为微秒，而 poll 和 epoll 为毫秒，因此 select 更加适用于实时性要求比较高的场景，比如核反应堆的控制。<br>select 可移植性更好，几乎被所有主流平台所支持。</p>
+<h3 id="poll-应用场景"><a href="#poll-应用场景" class="headerlink" title="poll 应用场景"></a>poll 应用场景</h3><p>poll 没有最大描述符数量的限制，如果平台支持并且对实时性要求不高，应该使用 poll 而不是 select。</p>
+<h3 id="epoll-应用场景"><a href="#epoll-应用场景" class="headerlink" title="epoll 应用场景"></a>epoll 应用场景</h3><p>只需要运行在 Linux 平台上，有大量的描述符需要同时轮询，并且这些连接最好是长连接。<br>需要同时监控小于 1000 个描述符，就没有必要使用 epoll，因为这个应用场景下并不能体现 epoll 的优势。<br>需要监控的描述符状态变化多，而且都是非常短暂的，也没有必要使用 epoll。因为 epoll 中的所有描述符都存储在内核中，造成每次需要对描述符的状态改变都需要通过 epoll_ctl() 进行系统调用，频繁系统调用降低效率。并且 epoll 的描述符存储在内核，不容易调试。</p>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/IO/"># IO</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2019/08/25/redis/persistence/">Redis的持久化</a>
+            
+            
+            <a class="next" rel="next" href="/2019/06/19/spring-security/architecture/">Spring Security 概述</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>

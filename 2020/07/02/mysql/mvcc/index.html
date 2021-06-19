@@ -14,7 +14,7 @@
 
 
 
-<title>Redis的持久化 | Evan&#39;s Blog</title>
+<title>MVCC | Evan&#39;s Blog</title>
 
 
 
@@ -179,21 +179,21 @@
     
     <article class="post-wrap">
         <header class="post-header">
-            <h1 class="post-title">Redis的持久化</h1>
+            <h1 class="post-title">MVCC</h1>
             
                 <div class="post-meta">
                     
 
                     
                         <span class="post-time">
-                        发表于: <a href="#">八月 25, 2019</a>
+                        发表于: <a href="#">七月 2, 2020</a>
                         </span>
                     
                     
                         <span class="post-category">
                     分类于:
                             
-                                <a href="/categories/redis/">redis</a>
+                                <a href="/categories/MySQL/">MySQL</a>
                             
                         </span>
                     
@@ -202,15 +202,32 @@
         </header>
 
         <div class="post-content">
-            <p>Redis的持久化机制有两种，第一种是快照<code>RDB</code>，第二种是<code>AOF</code>日志。快照是内存数据的<strong>二进制序列化形式</strong>，在存储上非常紧凑，而 AOF 日志记录的是内存数据修改的<strong>指令记录文本</strong>。AOF 日志在长期的运行过程中会变的无比庞大，数据库重启时需要加载 AOF 日志进行指令重放，这个时间就会无比漫长。所以需要定期进行 AOF 重写，给 AOF 日志进行瘦身。</p>
-<h1 id="快照原理"><a href="#快照原理" class="headerlink" title="快照原理"></a>快照原理</h1><p>Redis客户端同时提供两个命令来生成 RDB 存储文件，也就是<code>SAVE</code>和<code>BGSAVE</code>，通过命令的名字我们就能猜出这两个命令的区别。其中 SAVE 命令在执行时会直接阻塞当前的线程，由于 Redis 是 单线程 的，所以 SAVE 命令会直接阻塞来自客户端的所有其他请求，这在很多时候对于需要提供较强可用性保证的 Redis 服务都是无法接受的。我们往往需要 BGSAVE 命令在后台生成 Redis 全部数据对应的 RDB 文件，当我们使用 BGSAVE 命令时，Redis 会立刻<code>fork</code>出一个<strong>子进程</strong>（fork时会阻塞主进程），子进程会执行『将内存中的数据以 RDB 格式保存到磁盘中』这一过程，而Redis服务在<code>BGSAVE</code>工作期间仍然可以处理来自客户端的请求。<br>使用<code>fork</code>的目的是为了不阻塞主进程来提升 Redis 服务的可用性。<code>fork</code>之后的子进程是可以获取父进程内存中的数据的，而<code>fork</code>带来的额外性能开销相比阻塞主线程也是可以接受的。</p>
-<h2 id="子进程"><a href="#子进程" class="headerlink" title="子进程"></a>子进程</h2><p>调用<code>fork</code>后的父子进程会运行在不同的内存空间中，当<code>fork</code>发生时两者的内存空间有着完全相同的内容，对内存的写入和修改、文件的映射都是独立的，两个进程不会相互影响。<br>通过<code>fork</code>创建子进程时不会立刻触发大量内存的拷贝，内存在被修改时会以页为单位进行拷贝，这也就避免了大量拷贝内存而带来的性能问题。也就是写时拷贝（Copy On Write）。</p>
-<h1 id="AOF原理"><a href="#AOF原理" class="headerlink" title="AOF原理"></a>AOF原理</h1><p>AOF 日志存储的是 Redis 服务器的顺序指令序列，AOF 日志只记录对内存进行修改的指令记录。<br>Redis 会在收到客户端修改指令后，进行参数校验进行逻辑处理后，如果没问题，就立即将该指令文本存储到 AOF 日志中，也就是先执行指令才将日志存盘。这点不同于leveldb、hbase等存储引擎，它们都是<strong>先存储日志再做逻辑处理</strong>。</p>
-<h2 id="AOF-重写"><a href="#AOF-重写" class="headerlink" title="AOF 重写"></a>AOF 重写</h2><p>Redis 在长期运行的过程中，AOF 的日志会越变越长。如果实例宕机重启，重放整个 AOF 日志会非常耗时，导致长时间 Redis 无法对外提供服务。所以需要对 AOF 日志瘦身。<br>Redis 提供了<code>bgrewriteaof</code>指令用于对 AOF 日志进行瘦身。其原理就是开辟一个子进程对内存进行遍历<strong>转换</strong>成一系列 Redis 的操作指令，序列化到一个新的 AOF 日志文件中。<br>AOF 日志是以文件的形式存在的，当程序对 AOF 日志文件进行写操作时，实际上是将内容写到了内核为文件描述符分配的一个内存缓存中，然后内核会异步将脏数据刷回到磁盘的。存在缓存就意味着，如果未刷盘之前服务器掉电，就会产生数据丢失。<br>Linux提供了fsync(int fd)函数可以将指定文件的内容强制从内核缓存刷到磁盘。但是<code>fsync</code>是一个磁盘 IO 操作，很慢！所以在生产环境的服务器中，Redis 通常是每隔 1s 左右执行一次 fsync 操作，周期 1s 是可以配置的。  </p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>通常Redis的master节点是不会进行持久化操作，因为RDB比较耗费系统资源而AOF的<code>fsync</code>会阻塞Redis的服务，<strong>所以持久化操作主要在从节点进行。</strong>此外可以考虑Redis 4.0之后支持的混合持久化以减少Redis重启的时间。</p>
-<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
-<li><a target="_blank" rel="noopener" href="https://draveness.me/whys-the-design-redis-bgsave-fork/">为什么 Redis 快照使用子进程</a></li>
+            <p><strong>MVCC</strong>是MySQL中一种针对<em>读操作</em>的优化方案。MVCC 并不是一个与乐观和悲观并发控制对立的东西，它能够与两者很好的结合以增加事务的并发量，在目前最流行的 SQL 数据库 MySQL 和 PostgreSQL 中都对 MVCC 进行了实现。<br>它的基本原理就是每一个写操作都会创建一个新版本的数据，读操作会从有限多个版本的数据中挑选一个最合适的结果直接返回。在这时，读写操作之间的冲突就不再需要被关注，而管理和快速挑选数据的版本就成了 MVCC 需要解决的主要问题。</p>
+<h2 id="版本链"><a href="#版本链" class="headerlink" title="版本链"></a>版本链</h2><p>对于使用InnoDB存储引擎的表来说，它的聚簇索引记录中都包含两个必要的隐藏列：</p>
+<ul>
+<li>trx_id：每次一个事务对某条聚簇索引记录进行改动时，都会把该事务的事务id赋值给trx_id隐藏列。</li>
+<li>roll_pointer：每次对某条聚簇索引记录进行改动时，都会把旧的版本写入到undo日志中，然后这个隐藏列就相当于一个指针，可以通过它来找到该记录修改前的信息。</li>
 </ul>
+<p>每次对记录进行改动，都会记录一条undo log，每条undo log也都有一个roll_pointer属性，可以将这些undo日志都连起来，串成一个链表，就像下图一样：</p>
+<img src="/2020/07/02/mysql/mvcc/versionchain.png" class="">
+<p>版本链的头节点就是当前记录最新的值。</p>
+<h2 id="ReadView"><a href="#ReadView" class="headerlink" title="ReadView"></a>ReadView</h2><p>ReadView可以简单理解为快照。针对不同的事务隔离级别，MVCC的核心原理就是：当一个事务读取某个记录时，需要判断一下版本链中的哪个版本是当前事务可见的。为此，就有了ReadView的概念，ReadView中主要包含4个比较重要的内容：</p>
+<ul>
+<li>m_ids：表示在<strong>生成</strong>ReadView时当前系统中活跃的读写事务的事务id列表。</li>
+<li>min_trx_id：m_ids中的最小值。</li>
+<li>max_trx_id：表示<strong>生成</strong>ReadView时系统中应该分配给下一个事务的id值。max_trx_id并不是m_ids中的最大值，事务id是递增分配的。</li>
+<li>creator_trx_id：表示<strong>生成</strong>该ReadView的事务的事务id。</li>
+</ul>
+<p>简单理解就是m_ids是一个事务id区间为<code>[min_trx_id,max_trx_id)</code>的列表。<br>有了ReadView，在访问某个版本时，只需要从版本链开始按照下边的步骤遍历记录（undo log），找到第一个可见的版本数据就好了：</p>
+<ul>
+<li>如果版本的trx_id等于当前事务的id，那么意味着当前事务在访问它自己修改过的记录，所以该版本可以被当前事务访问。</li>
+<li>如果版本的trx_id 小于 [min_trx_id,max_trx_id) 区间的下界，表明生成该版本的事务在当前事务生成ReadView前<strong>已经提交</strong>，所以该版本<strong>可以</strong>被当前事务访问。</li>
+<li>如果版本的trx_id 大于 [min_trx_id,max_trx_id) 区间的上界，表明生成该版本的事务在当前事务生成ReadView后才开启，所以该版本<strong>不可以</strong>被当前事务访问。</li>
+<li>如果版本的trx_id 在 [min_trx_id,max_trx_id) 区间内，那就需要判断一下trx_id属性值是不是在m_ids列表中，如果在，说明创建ReadView时生成该版本的事务还是活跃的，该版本不可以被访问；如果不在，说明创建ReadView时生成该版本的事务已经被提交，该版本可以被访问。</li>
+</ul>
+<p>所以可以看到，当一个事务生成ReadView，那么这个事务可以看到自己修改的数据，可以看到在生成ReadView这一刻，其他已经提交的事务修改的数据。其余的情况是看不到的。<br>在MySQL中，<code>READ COMMITTED</code>和<code>REPEATABLE READ</code>隔离级别的的一个非常大的区别就是它们<strong>生成ReadView的时机不同</strong>。</p>
+<h2 id="READ-COMMITTED"><a href="#READ-COMMITTED" class="headerlink" title="READ COMMITTED"></a>READ COMMITTED</h2><p>读已提交是不允许发生<strong>脏读</strong>的，也就是不可以读到其他未提交的事务修改的数据。但是可能发生<strong>不可重复读</strong>和<strong>幻读</strong>问题，每次其他事务更新了数据并提交都可以读的到。因此读已提交隔离级别会<strong>在每一次进行普通SELECT操作前都生成一个ReadView</strong>。注意是<strong>每次</strong>都会。</p>
+<h2 id="REPEATABLE-READ"><a href="#REPEATABLE-READ" class="headerlink" title="REPEATABLE READ"></a>REPEATABLE READ</h2><p>可重复读是在读已提交的基础上，<strong>不可重复读</strong>也是不允许的，MySQL的实现，连<strong>幻读</strong>也可以避免。因此可重复读隔离级别会<strong>只在第一次进行普通SELECT操作前生成一个ReadView</strong>，之后的查询操作都重复使用这个ReadView。</p>
 
         </div>
 
@@ -221,9 +238,9 @@
                 <span class="tag">
                     
                     
-                        <a href="/tags/%E5%86%99%E6%97%B6%E6%8B%B7%E8%B4%9D/"># 写时拷贝</a>
+                        <a href="/tags/MySQL/"># MySQL</a>
                     
-                        <a href="/tags/fork/"># fork</a>
+                        <a href="/tags/%E4%BA%8B%E5%8A%A1/"># 事务</a>
                     
                         
                 </span>
@@ -236,10 +253,10 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2019/08/25/redis/threadmode/">Redis线程模型</a>
+                <a class="prev" rel="prev" href="/2020/07/03/mysql/lock/">MySQL中的锁</a>
             
             
-            <a class="next" rel="next" href="/2019/08/20/os/networkio/">网络I/O模型</a>
+            <a class="next" rel="next" href="/2020/07/01/mysql/transaction/">MySQL数据库事务</a>
             
         </section>
 

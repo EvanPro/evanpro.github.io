@@ -14,7 +14,7 @@
 
 
 
-<title>Redis的持久化 | Evan&#39;s Blog</title>
+<title>Redis线程模型 | Evan&#39;s Blog</title>
 
 
 
@@ -179,7 +179,7 @@
     
     <article class="post-wrap">
         <header class="post-header">
-            <h1 class="post-title">Redis的持久化</h1>
+            <h1 class="post-title">Redis线程模型</h1>
             
                 <div class="post-meta">
                     
@@ -202,14 +202,19 @@
         </header>
 
         <div class="post-content">
-            <p>Redis的持久化机制有两种，第一种是快照<code>RDB</code>，第二种是<code>AOF</code>日志。快照是内存数据的<strong>二进制序列化形式</strong>，在存储上非常紧凑，而 AOF 日志记录的是内存数据修改的<strong>指令记录文本</strong>。AOF 日志在长期的运行过程中会变的无比庞大，数据库重启时需要加载 AOF 日志进行指令重放，这个时间就会无比漫长。所以需要定期进行 AOF 重写，给 AOF 日志进行瘦身。</p>
-<h1 id="快照原理"><a href="#快照原理" class="headerlink" title="快照原理"></a>快照原理</h1><p>Redis客户端同时提供两个命令来生成 RDB 存储文件，也就是<code>SAVE</code>和<code>BGSAVE</code>，通过命令的名字我们就能猜出这两个命令的区别。其中 SAVE 命令在执行时会直接阻塞当前的线程，由于 Redis 是 单线程 的，所以 SAVE 命令会直接阻塞来自客户端的所有其他请求，这在很多时候对于需要提供较强可用性保证的 Redis 服务都是无法接受的。我们往往需要 BGSAVE 命令在后台生成 Redis 全部数据对应的 RDB 文件，当我们使用 BGSAVE 命令时，Redis 会立刻<code>fork</code>出一个<strong>子进程</strong>（fork时会阻塞主进程），子进程会执行『将内存中的数据以 RDB 格式保存到磁盘中』这一过程，而Redis服务在<code>BGSAVE</code>工作期间仍然可以处理来自客户端的请求。<br>使用<code>fork</code>的目的是为了不阻塞主进程来提升 Redis 服务的可用性。<code>fork</code>之后的子进程是可以获取父进程内存中的数据的，而<code>fork</code>带来的额外性能开销相比阻塞主线程也是可以接受的。</p>
-<h2 id="子进程"><a href="#子进程" class="headerlink" title="子进程"></a>子进程</h2><p>调用<code>fork</code>后的父子进程会运行在不同的内存空间中，当<code>fork</code>发生时两者的内存空间有着完全相同的内容，对内存的写入和修改、文件的映射都是独立的，两个进程不会相互影响。<br>通过<code>fork</code>创建子进程时不会立刻触发大量内存的拷贝，内存在被修改时会以页为单位进行拷贝，这也就避免了大量拷贝内存而带来的性能问题。也就是写时拷贝（Copy On Write）。</p>
-<h1 id="AOF原理"><a href="#AOF原理" class="headerlink" title="AOF原理"></a>AOF原理</h1><p>AOF 日志存储的是 Redis 服务器的顺序指令序列，AOF 日志只记录对内存进行修改的指令记录。<br>Redis 会在收到客户端修改指令后，进行参数校验进行逻辑处理后，如果没问题，就立即将该指令文本存储到 AOF 日志中，也就是先执行指令才将日志存盘。这点不同于leveldb、hbase等存储引擎，它们都是<strong>先存储日志再做逻辑处理</strong>。</p>
-<h2 id="AOF-重写"><a href="#AOF-重写" class="headerlink" title="AOF 重写"></a>AOF 重写</h2><p>Redis 在长期运行的过程中，AOF 的日志会越变越长。如果实例宕机重启，重放整个 AOF 日志会非常耗时，导致长时间 Redis 无法对外提供服务。所以需要对 AOF 日志瘦身。<br>Redis 提供了<code>bgrewriteaof</code>指令用于对 AOF 日志进行瘦身。其原理就是开辟一个子进程对内存进行遍历<strong>转换</strong>成一系列 Redis 的操作指令，序列化到一个新的 AOF 日志文件中。<br>AOF 日志是以文件的形式存在的，当程序对 AOF 日志文件进行写操作时，实际上是将内容写到了内核为文件描述符分配的一个内存缓存中，然后内核会异步将脏数据刷回到磁盘的。存在缓存就意味着，如果未刷盘之前服务器掉电，就会产生数据丢失。<br>Linux提供了fsync(int fd)函数可以将指定文件的内容强制从内核缓存刷到磁盘。但是<code>fsync</code>是一个磁盘 IO 操作，很慢！所以在生产环境的服务器中，Redis 通常是每隔 1s 左右执行一次 fsync 操作，周期 1s 是可以配置的。  </p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>通常Redis的master节点是不会进行持久化操作，因为RDB比较耗费系统资源而AOF的<code>fsync</code>会阻塞Redis的服务，<strong>所以持久化操作主要在从节点进行。</strong>此外可以考虑Redis 4.0之后支持的混合持久化以减少Redis重启的时间。</p>
+            <p>我们都知道，Redis使用单线程模型，可以达到10K级别的并发量。单线程为什么可以这么扛这么高的并发呢？我们一起探讨一下。</p>
+<h1 id="什么是-Redis-单线程？"><a href="#什么是-Redis-单线程？" class="headerlink" title="什么是 Redis 单线程？"></a>什么是 Redis 单线程？</h1><p>Redis 是单线程，主要是指 Redis 的<strong>网络 IO</strong> 和<strong>键值对读写</strong>是由<strong>一个线程</strong>来完成的，这也是 Redis 对外提供键值存储服务的主要流程。但 Redis 的其他功能，比如持久化、异步删除、集群数据同步等，其实是由额外的线程执行的。</p>
+<h1 id="为什么-Redis-用单线程？"><a href="#为什么-Redis-用单线程？" class="headerlink" title="为什么 Redis 用单线程？"></a>为什么 Redis 用单线程？</h1><p>与单线程相对应的自然就是多线程，我们都知道使用多线程可以提升程序的性能。我们所谓的提升性能主要是指降低延迟，提高吞吐量。那么多线程是怎样提高性能的呢？靠的是<strong>提升硬件利用率</strong>，在详细一点就是提高IO利用率和CPU利用率。由于CPU的速度和IO设备的速度相差好多个数量级，所以我们使用多线程就可以协调两者的速度差异，从而提高整体硬件的利用率。<br>但是Redis 如果不开启 AOF 备份，所有 Redis 的操作都会在内存中完成不会涉及任何的 I/O 操作。所以CPU不是 Redis 服务器的瓶颈，所以使用多线程模型带来的性能提升并不能抵消它带来的开发成本和维护成本。<br>整个服务的瓶颈在于网络传输带来的延迟和等待客户端的数据传输，也就是网络 I/O。网络 I/O 可以通过IO多路复用解决。<br>具体Redis是怎样实现IO多路复用的可以参考最后给的链接。</p>
+<h1 id="Redis-6-0中指的多线程又是什么？"><a href="#Redis-6-0中指的多线程又是什么？" class="headerlink" title="Redis 6.0中指的多线程又是什么？"></a>Redis 6.0中指的多线程又是什么？</h1><p>随着网络硬件的性能提升，Redis 的性能瓶颈有时会出现在网络 IO 的处理上，也就是说，单个主线程处理网络请求的速度跟不上底层网络硬件的速度。毕竟一个线程只能绑定到一个核心上，无法发挥多核的优势。<br>为了应对这个问题，一般有两种方法。<br>第一种方法是，用用户态网络协议栈（例如 DPDK）取代内核网络协议栈，让网络请求的处理不用在内核里执行，直接在用户态完成处理就行。这个方法要求在 Redis 的整体架构中，添加对用户态网络协议栈的支持，需要修改 Redis 源码中和网络相关的部分（例如修改所有的网络收发请求函数），这会带来很多开发工作量。而且新增代码还可能引入新 Bug，导致系统不稳定。所以，Redis 6.0 中并没有采用这个方法。<br>第二种方法就是采用多个 IO 线程来处理网络请求，提高网络请求处理的并行度。充分利用多核。但是，Redis 的多 IO 线程只是用来处理网络请求的，对于读写命令，Redis 仍然使用单线程来处理。在Redis 6.0中默认是不开启的。  </p>
+<p>我们来看下，在 Redis 6.0 中，主线程和 IO 线程具体是怎么协作完成请求处理的。为了方便你理解，我们可以把主线程和多 IO 线程的协作分成四个阶段。<br>阶段一：服务端和客户端建立 Socket 连接，并分配处理线程<br>首先，主线程负责接收建立连接请求。当有客户端请求和实例建立 Socket 连接时，主线程会创建和客户端的连接，并把 Socket 放入全局等待队列中。紧接着，主线程通过轮询方法把 Socket 连接分配给 IO 线程。<br>阶段二：IO 线程读取并解析请求<br>主线程一旦把 Socket 分配给 IO 线程，就会进入阻塞状态，等待 IO 线程完成客户端请求读取和解析。因为有多个 IO 线程在并行处理，所以，这个过程很快就可以完成。<br>阶段三：主线程执行请求操作<br>等到 IO 线程解析完请求，主线程还是会以单线程的方式执行这些命令操作。下面这张图显示了刚才介绍的这三个阶段，你可以看下，加深理解。</p>
+<img src="/2019/08/25/redis/threadmode/1.jpg" class="">
+<p>阶段四：IO 线程回写 Socket 和主线程清空全局队列<br>当主线程执行完请求操作后，会把需要返回的结果写入缓冲区，然后，主线程会阻塞等待 IO 线程把这些结果回写到 Socket 中，并返回给客户端。<br>和 IO 线程读取和解析请求一样，IO 线程回写 Socket 时，也是有多个线程在并发执行，所以回写 Socket 的速度也很快。等到 IO 线程回写 Socket 完毕，主线程会清空全局队列，等待客户端的后续请求。<br>我也画了一张图，展示了这个阶段主线程和 IO 线程的操作，你可以看下。</p>
+<img src="/2019/08/25/redis/threadmode/2.jpg" class="">
+
 <h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
-<li><a target="_blank" rel="noopener" href="https://draveness.me/whys-the-design-redis-bgsave-fork/">为什么 Redis 快照使用子进程</a></li>
+<li><a target="_blank" rel="noopener" href="https://draveness.me/redis-eventloop/">Redis 中的事件循环</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/NTp__OM17QxvTVWsz9BmbQ">破玩意 | Redis 为什么那么快</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/77331414">正式支持多线程！Redis 6.0与老版性能对比评测</a></li>
 </ul>
 
         </div>
@@ -221,9 +226,9 @@
                 <span class="tag">
                     
                     
-                        <a href="/tags/%E5%86%99%E6%97%B6%E6%8B%B7%E8%B4%9D/"># 写时拷贝</a>
+                        <a href="/tags/io/"># io</a>
                     
-                        <a href="/tags/fork/"># fork</a>
+                        <a href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/"># 多线程</a>
                     
                         
                 </span>
@@ -236,10 +241,10 @@
         </section>
         <section class="post-nav">
             
-                <a class="prev" rel="prev" href="/2019/08/25/redis/threadmode/">Redis线程模型</a>
+                <a class="prev" rel="prev" href="/2019/09/01/redis/high-available/">Redis的复制及高可用</a>
             
             
-            <a class="next" rel="next" href="/2019/08/20/os/networkio/">网络I/O模型</a>
+            <a class="next" rel="next" href="/2019/08/25/redis/persistence/">Redis的持久化</a>
             
         </section>
 
