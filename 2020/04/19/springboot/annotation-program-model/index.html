@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>Spring 注解编程模型 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Spring 注解编程模型</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">四月 19, 2020</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/Spring-Boot/">Spring Boot</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>理解Spring注解编程模型是深入探讨Spring Boot注解驱动及<strong>自动装配</strong>的重要前提。<br><a target="_blank" rel="noopener" href="https://github.com/spring-projects/spring-framework/wiki/Spring-Annotation-Programming-Model">Spring Annotation Programming Model</a></p>
+<h2 id="Spring-Annotation-API"><a href="#Spring-Annotation-API" class="headerlink" title="Spring Annotation API"></a>Spring Annotation API</h2><p>Spring使用<code>AnnotationMetadata</code>接口定义对某个类的注解的抽象访问。它有两种实现，一种是基于Java反射API的<code>StandardAnnotationMetadata</code>；一种是使用ASM的<code>SimpleAnnotationMetadata</code>。基于Java反射API的实现有一个前提，被反射的Class必须被ClassLoader加载，因此ASM的实现适用于不应该加载Class又需要获取Class内注解信息的情况。ASM的实现方式在性能上要优于Java反射API的实现方式。  </p>
+<p>罗列一下之后会用到的一些方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * ClassMetadata是Class元数据的一些抽象，基本等同于Class类的API；AnnotatedTypeMetadata抽象了 </span></span><br><span class="line"><span class="comment"> * class（AnnotationMetadata实例）或者method（MethodMetadata实例）对注解的访问。</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">AnnotationMetadata</span> <span class="keyword">extends</span> <span class="title">ClassMetadata</span>, <span class="title">AnnotatedTypeMetadata</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 此方法定义在AnnotatedTypeMetadata接口中！此处为了方便写在这里。</span></span><br><span class="line"><span class="comment">	 * 获取直接标注在被标注元素class、method）上的注解的详细信息。</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function">MergedAnnotations <span class="title">getAnnotations</span><span class="params">()</span></span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 获取存在于被标注类的所有注解类型的完全限定类名</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">    <span class="function"><span class="keyword">default</span> Set&lt;String&gt; <span class="title">getAnnotationTypes</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ...</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 获取传入的已标注在被标注类上的注解的元注解的完全限定类名。</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">default</span> Set&lt;String&gt; <span class="title">getMetaAnnotationTypes</span><span class="params">(String annotationName)</span> </span>&#123;</span><br><span class="line">        ...</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 这个方法是一个创建AnnotationMetadata实例的工厂方法。入参就是被标注类，使用Java反射API实现。</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">static</span> AnnotationMetadata <span class="title">introspect</span><span class="params">(Class&lt;?&gt; type)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> StandardAnnotationMetadata.from(type);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在Java反射编程模型中，注解之间无法继承，也不能实现接口，不过Java语言默认将所有注解实现<strong>Annotation</strong>接口，被标注的对象用API <strong>AnnotatedElement</strong>表达。通过**AnnotatedElement#getAnnotation(Class)**方法返回指定类型的注解对象，获取注解属性需要显式地调用对应的属性方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@TransactionalService(name = &quot;test&quot;)</span> <span class="comment">// name 属性内容</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransactionalServiceAnnotationReflectionBootstrap</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// Class 实现了 AnnotatedElement 接口</span></span><br><span class="line">        AnnotatedElement annotatedElement = TransactionalServiceAnnotationReflectionBootstrap.class;</span><br><span class="line">        <span class="comment">// 从 AnnotatedElement 获取 TransactionalService</span></span><br><span class="line">        TransactionalService transactionalService = annotatedElement.getAnnotation(TransactionalService.class);</span><br><span class="line">        <span class="comment">// 显示地调用属性方法 TransactionalService#name() 获取属性</span></span><br><span class="line"><span class="comment">//        String nameAttribute = transactionalService.name();</span></span><br><span class="line"><span class="comment">//        System.out.println(&quot;@TransactionalService.name() = &quot; + nameAttribute);</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 输出 @TransactionalService 属性</span></span><br><span class="line"><span class="comment">//        printAnnotationAttribute(transactionalService);</span></span><br><span class="line">        <span class="comment">// 获取 transactionalService 的所有的元注解</span></span><br><span class="line">        Set&lt;Annotation&gt; metaAnnotations = getAllMetaAnnotations(transactionalService);</span><br><span class="line">        <span class="comment">// 输出结果</span></span><br><span class="line">        metaAnnotations.forEach(TransactionalServiceAnnotationReflectionBootstrap::printAnnotationAttribute);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Set&lt;Annotation&gt; <span class="title">getAllMetaAnnotations</span><span class="params">(Annotation annotation)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        Annotation[] metaAnnotations = annotation.annotationType().getAnnotations();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (ObjectUtils.isEmpty(metaAnnotations)) &#123; <span class="comment">// 没有找到，返回空集合</span></span><br><span class="line">            <span class="keyword">return</span> Collections.emptySet();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 获取所有非 Java 标准元注解结合</span></span><br><span class="line">        Set&lt;Annotation&gt; metaAnnotationsSet = Stream.of(metaAnnotations)</span><br><span class="line">                <span class="comment">// 排除 Java 标准注解，如 @Target，@Documented 等，它们因相互依赖，将导致递归不断</span></span><br><span class="line">                <span class="comment">// 通过 java.lang.annotation 包名排除</span></span><br><span class="line">                .filter(metaAnnotation -&gt; !Target.class.getPackage().equals(metaAnnotation.annotationType().getPackage()))</span><br><span class="line">                .collect(Collectors.toSet());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 递归查找元注解的元注解集合</span></span><br><span class="line">        Set&lt;Annotation&gt; metaMetaAnnotationsSet = metaAnnotationsSet.stream()</span><br><span class="line">                .map(TransactionalServiceAnnotationReflectionBootstrap::getAllMetaAnnotations)</span><br><span class="line">                .collect(HashSet::<span class="keyword">new</span>, Set::addAll, Set::addAll);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 添加递归结果</span></span><br><span class="line">        metaMetaAnnotationsSet.add(annotation);</span><br><span class="line">        <span class="keyword">return</span> metaMetaAnnotationsSet;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printAnnotationAttribute</span><span class="params">(Annotation annotation)</span> </span>&#123;</span><br><span class="line">        Class&lt;?&gt; annotationType = annotation.annotationType();</span><br><span class="line">        <span class="comment">// 完全 Java 反射实现（ReflectionUtils 为 Spring 反射工具类）</span></span><br><span class="line">        ReflectionUtils.doWithMethods(annotationType,</span><br><span class="line">                method -&gt; System.out.printf(<span class="string">&quot;@%s.%s() = %s\n&quot;</span>, annotationType.getSimpleName(),</span><br><span class="line">                        method.getName(), ReflectionUtils.invokeMethod(method, annotation)) <span class="comment">// 执行 Method 反射调用</span></span><br><span class="line"><span class="comment">//                , method -&gt; method.getParameterCount() == 0); // 选择无参数方法</span></span><br><span class="line">                , method -&gt; !method.getDeclaringClass().equals(Annotation.class));<span class="comment">// 选择非 Annotation 方法</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="名词解释"><a href="#名词解释" class="headerlink" title="名词解释"></a>名词解释</h2><h3 id="元注解（Meta-Annotations）"><a href="#元注解（Meta-Annotations）" class="headerlink" title="元注解（Meta-Annotations）"></a>元注解（Meta-Annotations）</h3><blockquote>
+<p>A <strong><em>meta-annotation</em></strong> is an annotation that is declared on another annotation. An annotation is therefore <em>meta-annotated</em> if it is annotated with another annotation. For example, any annotation that is declared to be <em>documented</em> is meta-annotated with <code>@Documented</code> from the <code>java.lang.annotation</code> package.</p>
+</blockquote>
+<p>所谓元注解是指一个能声明在其他注解上的注解。在Spring的使用场景中，<code>@Component</code>就是标准的元注解。</p>
+<h3 id="Spring模式注解（Stereotype-Annotations）"><a href="#Spring模式注解（Stereotype-Annotations）" class="headerlink" title="Spring模式注解（Stereotype Annotations）"></a>Spring模式注解（Stereotype Annotations）</h3><blockquote>
+<p>A <strong><em>stereotype annotation</em></strong> is an annotation that is used to declare the role that a component plays within the application.</p>
+<p><code>@Component</code> is a generic stereotype for any Spring-managed component. Any component annotated with <code>@Component</code> is a candidate for component scanning. Similarly, any component annotated with an annotation that is itself meta-annotated with <code>@Component</code> is also a candidate for component scanning.</p>
+<p>Core Spring provides several stereotype annotations out of the box, including but not limited to: <code>@Component</code>, <code>@Service</code>, <code>@Repository</code>, <code>@Controller</code>, <code>@RestController</code>, and <code>@Configuration</code>. <code>@Repository</code>, <code>@Service</code></p>
+</blockquote>
+<p>由于Java语言规范规定，<strong>Annotation不允许继承</strong>，没有类派生子类的能力。因此Spring采用元标注的方式实现注解之间的“派生”。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target(ElementType.TYPE)</span></span><br><span class="line"><span class="meta">@Retention(RetentionPolicy.RUNTIME)</span></span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Indexed</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Component &#123;</span><br><span class="line">	<span class="function">String <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> &quot;&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Spring-Component注解派生性原理"><a href="#Spring-Component注解派生性原理" class="headerlink" title="Spring @Component注解派生性原理"></a>Spring @Component注解派生性原理</h4><p>Spring的组件扫描是由ClassPathBeanDefinitionScanner和AnnotationTypeFilter相互配合实现的。ClassPathBeanDefinitionScanner默认在指定根包路径（basePackage）下，将查找所有标注@Component及“派生”注解的BeanDefinition集合，并且默认的过滤规则由AnnotationTypeFilter以及@Component的元信息（ClassMetaData和AnnotationMetaData）共同决定。</p>
+<p>默认的includeFilters：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">this</span>.includeFilters.add(<span class="keyword">new</span> AnnotationTypeFilter(Component.class));</span><br></pre></td></tr></table></figure>
+<p>AnnotationTypeFilter会匹配给定的注解类型（@Component）以及以其作为元注解的注解类型，默认的是@Repository、@Service、@Controller。官方文档只写了这4种，但是Spring Framework3.0以后引入的@Configuration也是一样的。</p>
+<p>但是AnnotationTypeFilter只能匹配直接标注@Component作为元注解的注解类型，无法匹配多层级的注解类型（例如：@SpringBootConfiguration）</p>
+<p>ClassPathBeanDefinitionScanner#doScan方法使用MetadataReader接口的具体实现SimpleMetadataReader构造SimpleAnnotationMetadataReadingVisitor</p>
+<p>Spring Framework从4.x开始，通过AnnotationAttributessReadingVisitor采用递归的方式查找元注解，从而支持多层次派生。</p>
+<h3 id="Spring-组合注解（Composed-Annotations）"><a href="#Spring-组合注解（Composed-Annotations）" class="headerlink" title="Spring 组合注解（Composed Annotations）"></a>Spring 组合注解（Composed Annotations）</h3><blockquote>
+<p>A <strong><em>composed annotation</em></strong> is an annotation that is <em>meta-annotated</em> with one or more annotations with the intent of combining the behavior associated with those meta-annotations into a single custom annotation. For example, an annotation named <code>@TransactionalService</code> that is meta-annotated with Spring’s <code>@Transactional</code> and <code>@Service</code> annotations is a composed annotation that combines the semantics of <code>@Transactional</code> and <code>@Service</code>. <code>@TransactionalService</code> is technically also a custom <em>stereotype annotation</em>.</p>
+</blockquote>
+<p>Spring组合注解和模式注解的元信息抽象是一样的，均由AnnotationMetadata API抽象表达，具体某个注解的“元注解”信息则通过getMetaAnnotationTypes(String)方法查询。</p>
+<h3 id="Spring注解属性别名和覆盖（Attribute-Aliases-and-Overrides）"><a href="#Spring注解属性别名和覆盖（Attribute-Aliases-and-Overrides）" class="headerlink" title="Spring注解属性别名和覆盖（Attribute Aliases and Overrides）"></a>Spring注解属性别名和覆盖（Attribute Aliases and Overrides）</h3><p>Spring注解元信息抽象<code>AnnotationMetadata</code>提供了getMetaAnnotationTypes(String)方法获取所有元注解类型集合，再结合getAnnotationAttributes(String)方法返回注解所有关联的属性信息，以Map结构储存。<code>AnnotationMetadata</code>有两种实现：基于ASM的AnnotationMetadataReadingVisitor和Java反射API的StandardAnnotationMetadata。</p>
+<blockquote>
+<p>Spring提供两种实现的可能是考虑到不同的使用场景，凡是基于Java反射API的实现必然需要一个大前提，即被反射的Class必须被ClassLoader加载。当Spring应用指定的Java package扫描Spring模式注解时，应用并不需要、更不应该把package下所有的Class悉数加载，所以需要用到ASM的方式直接读取Class文件信息。此外ASM实现方式在性能上要优于反射的实现方式。</p>
+</blockquote>
+<p>AnnotationAttributes是Spring对注解属性的抽象，它直接拓展了LinkedHashMap，既使用Key-Value的数据结构，又确保了其顺序与属性方法声明一致。同时由于它采用Map结构，若不同层次的元注解之间出现同名属性，则必然出现重叠的情况。</p>
+<blockquote>
+<p>An <strong><em>attribute override</em></strong> is an annotation attribute that <em>overrides</em> (or <em>shadows</em>) an annotation attribute in a meta-annotation. Attribute overrides can be categorized as follows.</p>
+<ol>
+<li><strong>Implicit Overrides</strong>: given attribute <code>A</code> in annotation <code>@One</code> and attribute <code>A</code> in annotation <code>@Two</code>, if <code>@One</code> is meta-annotated with <code>@Two</code>, then attribute <code>A</code> in annotation <code>@One</code> is an <em>implicit override</em> for attribute <code>A</code> in annotation <code>@Two</code> based solely on a naming convention (i.e., both attributes are named <code>A</code>).</li>
+<li><strong>Explicit Overrides</strong>: if attribute <code>A</code> is declared as an alias for attribute <code>B</code> in a meta-annotation via <code>@AliasFor</code>, then <code>A</code> is an <em>explicit override</em> for <code>B</code>.</li>
+<li><strong>Transitive Explicit Overrides</strong>: if attribute <code>A</code> in annotation <code>@One</code> is an explicit override for attribute <code>B</code> in annotation <code>@Two</code> and <code>B</code> is an explicit override for attribute <code>C</code> in annotation <code>@Three</code>, then <code>A</code> is a <em>transitive explicit override</em> for <code>C</code> following the <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Transitive_relation">law of transitivity</a>.</li>
+</ol>
+</blockquote>
+<p>覆盖采取就近原则，例如<code>@Service</code>的value属性会覆盖<code>@Component</code>的value属性。或者使用<code>@AliasFor</code>进行覆盖。</p>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Java/"># Java</a>
+                    
+                        <a href="/tags/Spring/"># Spring</a>
+                    
+                        <a href="/tags/Spring-Boot/"># Spring Boot</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2020/05/06/mq/rabbitmq1/">RabbitMQ初探</a>
+            
+            
+            <a class="next" rel="next" href="/2020/04/04/springboot/application-architecture/">Spring Boot应用结构</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>

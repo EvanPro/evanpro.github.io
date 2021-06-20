@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>Spring 注解驱动设计模式 | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">Spring 注解驱动设计模式</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">十月 17, 2020</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/Spring-Boot/">Spring Boot</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <p>Spring Framework自3.1开始，支持“@Enable 模块驱动”。其意义在于能够简化装配步骤，实现“按需装配”，同时屏蔽组件集合装配的细节。Spring Framework在实现上分为两类：“<strong>注解驱动</strong>”和“<strong>接口编程</strong>”。两种实现均需要依赖<code>@Import</code>，其职责是导入一个或多个组件类（ <em>component classes</em> ），将其定义为Spring Bean。<br>这里的组件类分两种：</p>
+<ul>
+<li>被标注<code>@Configuration</code>的类；普通的组件类，作用类似AnnotationConfigApplicationContext#register（对应注解驱动）</li>
+<li><code>ImportSelector</code>或者<code>ImportBeanDefinitionRegistrar</code>接口的实现类（对应接口编程）。</li>
+</ul>
+<h2 id="基于”注解驱动”"><a href="#基于”注解驱动”" class="headerlink" title="基于”注解驱动”"></a>基于”注解驱动”</h2><p><code>@EnableWebMvc</code>注解是基于“注解驱动”的例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Retention(RetentionPolicy.RUNTIME)</span></span><br><span class="line"><span class="meta">@Target(ElementType.TYPE)</span></span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Import(DelegatingWebMvcConfiguration.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> EnableWebMvc &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration(proxyBeanMethods = false)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DelegatingWebMvcConfiguration</span> <span class="keyword">extends</span> <span class="title">WebMvcConfigurationSupport</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="基于“接口编程”"><a href="#基于“接口编程”" class="headerlink" title="基于“接口编程”"></a>基于“接口编程”</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Interface to be implemented by types that determine which @&#123;<span class="doctag">@link</span> Configuration&#125;</span></span><br><span class="line"><span class="comment"> * class(es) should be imported based on a given selection criteria, usually one or</span></span><br><span class="line"><span class="comment"> * more annotation attributes.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ImportSelector</span> </span>&#123;</span><br><span class="line">	String[] selectImports(AnnotationMetadata importingClassMetadata);</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="function"><span class="keyword">default</span> Predicate&lt;String&gt; <span class="title">getExclusionFilter</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>ImportSelector</code>接口的作用是判断哪些被<code>@Configuration</code>标注的类应该被导入，判断条件一般是一个或多个注解属性。<code>ImportSelector</code>接口定义了一个<em>selectImports</em>方法，返回需要被导入的类的全称限定名。入参是正在被导入的<code>@Configuration</code>类的<code>AnnotationMetadata</code>。这里正在被导入的<code>@Configuration</code>类是指<code>@Import</code>标注的类，在“**@Enable 模块驱动<strong>”中指被</strong>@Enable**标注的类。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ImportBeanDefinitionRegistrar</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">default</span> <span class="keyword">void</span> <span class="title">registerBeanDefinitions</span><span class="params">(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry,</span></span></span><br><span class="line"><span class="function"><span class="params">			BeanNameGenerator importBeanNameGenerator)</span> </span>&#123;</span><br><span class="line">		registerBeanDefinitions(importingClassMetadata, registry);</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">	<span class="function"><span class="keyword">default</span> <span class="keyword">void</span> <span class="title">registerBeanDefinitions</span><span class="params">(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry)</span> </span>&#123;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>ImportBeanDefinitionRegistrar</code>接口相对于<code>ImportSelector</code>而言，多了一个<code>BeanDefinitionRegistry</code>，作为入参，将Bean定义（BeanDefinition）的注册也交给了开发人员。</p>
+<h2 id="Enable模块驱动原理"><a href="#Enable模块驱动原理" class="headerlink" title="@Enable模块驱动原理"></a>@Enable模块驱动原理</h2><p>​        在Spring应用上下文启动过程中（AbstractApplicationContext#refresh()方法被调用时），Spring容器（BeanFactory）将<strong>ConfigurationClassPostProcessor</strong>初始化为Spring Bean，作为优先级最高的BeanFactoryPostProcessor实现，随后其postProcessBeanFactory方法被调用。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">int</span> factoryId = System.identityHashCode(beanFactory);</span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.factoriesPostProcessed.contains(factoryId)) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">					<span class="string">&quot;postProcessBeanFactory already called on this post-processor against &quot;</span> + beanFactory);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">this</span>.factoriesPostProcessed.add(factoryId);</span><br><span class="line">		<span class="keyword">if</span> (!<span class="keyword">this</span>.registriesPostProcessed.contains(factoryId)) &#123;</span><br><span class="line">			<span class="comment">// BeanDefinitionRegistryPostProcessor hook apparently not supported...</span></span><br><span class="line">			<span class="comment">// Simply call processConfigurationClasses lazily at this point then.</span></span><br><span class="line">			processConfigBeanDefinitions((BeanDefinitionRegistry) beanFactory);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		enhanceConfigurationClasses(beanFactory);</span><br><span class="line">		beanFactory.addBeanPostProcessor(<span class="keyword">new</span> ImportAwareBeanPostProcessor(beanFactory));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>列一下processConfigBeanDefinitions主要的步骤：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">processConfigBeanDefinitions</span><span class="params">(BeanDefinitionRegistry registry)</span> </span>&#123;</span><br><span class="line">		List&lt;BeanDefinitionHolder&gt; configCandidates = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">		String[] candidateNames = registry.getBeanDefinitionNames();</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">for</span> (String beanName : candidateNames) &#123;</span><br><span class="line">			BeanDefinition beanDef = registry.getBeanDefinition(beanName);</span><br><span class="line">			...</span><br><span class="line">			<span class="comment">// 将configuration类或者在configuration/component类中声明的嵌套component类加入configCandidates</span></span><br><span class="line">			<span class="keyword">else</span> <span class="keyword">if</span> (ConfigurationClassUtils.checkConfigurationClassCandidate(beanDef, <span class="keyword">this</span>.metadataReaderFactory)) &#123;</span><br><span class="line">				configCandidates.add(<span class="keyword">new</span> BeanDefinitionHolder(beanDef, beanName));</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">    	...</span><br><span class="line">        <span class="comment">// 使用ConfigurationClassParser解析每一个@Configuration类</span></span><br><span class="line">		ConfigurationClassParser parser = <span class="keyword">new</span> ConfigurationClassParser(</span><br><span class="line">				<span class="keyword">this</span>.metadataReaderFactory, <span class="keyword">this</span>.problemReporter, <span class="keyword">this</span>.environment,</span><br><span class="line">				<span class="keyword">this</span>.resourceLoader, <span class="keyword">this</span>.componentScanBeanNameGenerator, registry);</span><br><span class="line">    	...</span><br><span class="line">    	Set&lt;BeanDefinitionHolder&gt; candidates = <span class="keyword">new</span> LinkedHashSet&lt;&gt;(configCandidates);</span><br><span class="line">    	...</span><br><span class="line">        parser.parse(candidates);</span><br><span class="line">    	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>parse方法将@Configuration类包装为<code>ConfigurationClass</code>，然后调用processConfigurationClass方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">processConfigurationClass</span><span class="params">(ConfigurationClass configClass, Predicate&lt;String&gt; filter)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="comment">// Recursively process the configuration class and its superclass hierarchy.</span></span><br><span class="line">		SourceClass sourceClass = asSourceClass(configClass, filter);</span><br><span class="line">		<span class="keyword">do</span> &#123;</span><br><span class="line">			sourceClass = doProcessConfigurationClass(configClass, sourceClass, filter);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">while</span> (sourceClass != <span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">this</span>.configurationClasses.put(configClass, configClass);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>processConfigurationClass方法又调用了doProcessConfigurationClass进行处理。doProcessConfigurationClass方法会处理很多注解，例如<code>@Component</code>、<code>@PropertySource</code>、<code>@ComponentScan</code>、<code>@Bean</code>方法等。我们这里只关注对<code>@Import</code>注解的处理方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Process any @Import annotations</span></span><br><span class="line">processImports(configClass, sourceClass, getImports(sourceClass), filter, <span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">processImports</span><span class="params">(ConfigurationClass configClass, SourceClass currentSourceClass,</span></span></span><br><span class="line"><span class="function"><span class="params">			Collection&lt;SourceClass&gt; importCandidates, Predicate&lt;String&gt; exclusionFilter,</span></span></span><br><span class="line"><span class="function"><span class="params">			<span class="keyword">boolean</span> checkForCircularImports)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">for</span> (SourceClass candidate : importCandidates) &#123;</span><br><span class="line">					<span class="keyword">if</span> (candidate.isAssignable(ImportSelector.class)) &#123;</span><br><span class="line">						<span class="comment">// Candidate class is an ImportSelector -&gt; delegate to it to determine imports</span></span><br><span class="line">						Class&lt;?&gt; candidateClass = candidate.loadClass();</span><br><span class="line">						ImportSelector selector = ParserStrategyUtils.instantiateClass(candidateClass, ImportSelector.class,</span><br><span class="line">								<span class="keyword">this</span>.environment, <span class="keyword">this</span>.resourceLoader, <span class="keyword">this</span>.registry);</span><br><span class="line">						Predicate&lt;String&gt; selectorFilter = selector.getExclusionFilter();</span><br><span class="line">						<span class="keyword">if</span> (selectorFilter != <span class="keyword">null</span>) &#123;</span><br><span class="line">							exclusionFilter = exclusionFilter.or(selectorFilter);</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="keyword">if</span> (selector <span class="keyword">instanceof</span> DeferredImportSelector) &#123;</span><br><span class="line">							<span class="keyword">this</span>.deferredImportSelectorHandler.handle(configClass, (DeferredImportSelector) selector);</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="keyword">else</span> &#123;</span><br><span class="line">							String[] importClassNames = selector.selectImports(currentSourceClass.getMetadata());</span><br><span class="line">							Collection&lt;SourceClass&gt; importSourceClasses = asSourceClasses(importClassNames, exclusionFilter);</span><br><span class="line">							processImports(configClass, currentSourceClass, importSourceClasses, exclusionFilter, <span class="keyword">false</span>);</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">else</span> <span class="keyword">if</span> (candidate.isAssignable(ImportBeanDefinitionRegistrar.class)) &#123;</span><br><span class="line">						<span class="comment">// Candidate class is an ImportBeanDefinitionRegistrar -&gt;</span></span><br><span class="line">						<span class="comment">// delegate to it to register additional bean definitions</span></span><br><span class="line">						Class&lt;?&gt; candidateClass = candidate.loadClass();</span><br><span class="line">						ImportBeanDefinitionRegistrar registrar =</span><br><span class="line">								ParserStrategyUtils.instantiateClass(candidateClass, ImportBeanDefinitionRegistrar.class,</span><br><span class="line">										<span class="keyword">this</span>.environment, <span class="keyword">this</span>.resourceLoader, <span class="keyword">this</span>.registry);</span><br><span class="line">						configClass.addImportBeanDefinitionRegistrar(registrar, currentSourceClass.getMetadata());</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">else</span> &#123;</span><br><span class="line">						<span class="comment">// Candidate class not an ImportSelector or ImportBeanDefinitionRegistrar -&gt;</span></span><br><span class="line">						<span class="comment">// process it as an @Configuration class</span></span><br><span class="line">						<span class="keyword">this</span>.importStack.registerImport(</span><br><span class="line">								currentSourceClass.getMetadata(), candidate.getMetadata().getClassName());</span><br><span class="line">						processConfigurationClass(candidate.asConfigClass(configClass), exclusionFilter);</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到<em>processImports</em>方法会处理<code>ImportSelector</code>实现、<code>ImportBeanDefinitionRegistrar</code>实现，其他情况会视为<code>@Configuration</code>类，再调用回<em>processConfigurationClass</em>方法。最后<code>ConfigurationClass</code>集合将被注册为Spring Bean。</p>
+<p><strong>ConfigurationClassPostProcessor</strong>不仅检查<code>@Configuration</code>和@<code>Bean</code>两种Bean定义方式，还处理<code>@Component</code>。<code>@Configuration</code>类标注为“完全模式”，而<code>@Component</code>和@<code>Bean</code>方法则是“轻量模式”。最后使用CGLib实现ConfigurationClassEnhancer对<code>@Configuration</code>类进行提升。</p>
+<p>综上所述，<strong>ConfigurationClassPostProcessor</strong>负责筛选<code>@Component</code>类、<code>@Configuration</code>类及@<code>Bean</code>方法的BeanDefinition，<strong>ConfigurationClassParser</strong>则从候选的Bean定义中解析出<code>ConfigurationClass</code>集合并注册成Spring Bean。</p>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Java/"># Java</a>
+                    
+                        <a href="/tags/Spring/"># Spring</a>
+                    
+                        <a href="/tags/Spring-Boot/"># Spring Boot</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/2021/01/19/network/protocal-stack/">协议栈</a>
+            
+            
+            <a class="next" rel="next" href="/2020/08/10/java/threadpoolexecutor/">ThreadPoolExecutor 实现原理</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>
