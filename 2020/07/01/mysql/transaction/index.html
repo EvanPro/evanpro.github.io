@@ -220,8 +220,9 @@
 <li>log buffer空间不足时</li>
 <li>事务提交时</li>
 <li>后台线程不停的刷刷刷</li>
-<li>正常关闭服务器时<h2 id="原子性"><a href="#原子性" class="headerlink" title="原子性"></a>原子性</h2>事务需要保证原子性，也就是事务中的操作要么全部完成，要么什么也不做。事务执行过程中可能已经修改了很多东西，为了保证事务的原子性，我们需要把东西改回原先的样子，这个过程就称之为回滚。<br>因此为了回滚就需要记录日志：<strong>undo log</strong>。针对不同的操作：INSERT、DELETE、UPDATE，undo log的格式也是不一样的。</li>
+<li>正常关闭服务器时  </li>
 </ul>
+<h2 id="原子性"><a href="#原子性" class="headerlink" title="原子性"></a>原子性</h2><p>事务需要保证原子性，也就是事务中的操作要么全部完成，要么什么也不做。事务执行过程中可能已经修改了很多东西，为了保证事务的原子性，我们需要把东西改回原先的样子，这个过程就称之为回滚。<br>因此为了回滚就需要记录日志：<strong>undo log</strong>。针对不同的操作：INSERT、DELETE、UPDATE，undo log的格式也是不一样的。</p>
 <h1 id="隔离性"><a href="#隔离性" class="headerlink" title="隔离性"></a>隔离性</h1><p>理论上来说为了保证隔离性，在某个事务对某个数据进行访问时，其他事务应该排队，当该事务提交后，其他事务才能继续访问这个数据。但是，这样做毫无性能可言，所以需要设置一些隔离级别以达到隔离性和性能之间的平衡。</p>
 <h2 id="事务并发执行可能遇到的问题"><a href="#事务并发执行可能遇到的问题" class="headerlink" title="事务并发执行可能遇到的问题"></a>事务并发执行可能遇到的问题</h2><h3 id="脏写（Dirty-Write）"><a href="#脏写（Dirty-Write）" class="headerlink" title="脏写（Dirty Write）"></a>脏写（Dirty Write）</h3><p>如果一个事务修改了另一个<strong>未提交</strong>事务修改过的数据，那就意味着发生了脏写。</p>
 <h3 id="脏读（Dirty-Read）"><a href="#脏读（Dirty-Read）" class="headerlink" title="脏读（Dirty Read）"></a>脏读（Dirty Read）</h3><p>如果一个事务读到了另一个<strong>未提交</strong>事务修改过的数据，那就意味着发生了脏读。</p>
