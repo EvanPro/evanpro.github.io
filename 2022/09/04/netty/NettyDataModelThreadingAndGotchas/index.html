@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="Evan">
+
+
+
+    <meta name="description" content="少年书生志气宏">
+
+
+
+<title>【译】Netty data model, threading, and gotchas | Evan&#39;s Blog</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.3.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Evan&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Evan&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">【译】Netty data model, threading, and gotchas</h1>
+            
+                <div class="post-meta">
+                    
+
+                    
+                        <span class="post-time">
+                        发表于: <a href="#">九月 4, 2022</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    分类于:
+                            
+                                <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <blockquote>
+<p>本文是对Netty官网Related articles <a target="_blank" rel="noopener" href="https://medium.com/@akhaku/netty-data-model-threading-and-gotchas-cab820e4815a">Netty data model, threading, and gotchas</a> 的翻译版本。  </p>
+</blockquote>
+<p>在我们开始之前，需要注意的是本文包含一些从<a target="_blank" rel="noopener" href="https://www.manning.com/books/netty-in-action">Netty in Action</a>中得到的经验。这本书是相当有用的读物，可以从第二版中受益匪浅。本文分为两部分：第一部分构建了上下文并且介绍了数据模型（data model）；第二部分讨论了Netty的实际使用以及需要避免的潜在错误。根据你要查找的内容，你可以选择跳过其中一个部分。</p>
+<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>在Java的早期，进行网络编程的唯一方法是使用 Socket API 和阻塞式 I/O。这意味着你需要为每个连接启动一个线程来处理并发连接，因为 I/O 随时可能阻塞。阻塞模型适用于少量的连接/线程，但是当处理大量的连接时，上下文切换和创建大量线程的开销会成为性能瓶颈。Java最终增加了非阻塞I/O（NIO）使得可以通过线程池处理大量的连接。然而，API 比旧的阻塞 I/O API (OIO) 复杂得多，并且实现高性能网络操作可能相当困难。这就是 Netty 的用武之地。<br>Netty的核心是一个简化网络操作的Java库。它支持阻塞和非阻塞两种 I/O 模型，面向连接的协议（如 TCP）和无连接协议（如 UDP），以及管理客户端和服务器上的数据传输。事实上，它抽象出了所有那些较低级别的细节，并允许用户专注于他们的业务逻辑。API 是事件驱动的；由于它是一个网络编程库，核心的事件（event）与收发的字节有关，但 Netty 还支持用户定义事件来执行自定义逻辑。Netty的API是完全异步的，即使配置了使用阻塞 I/O 模型。Netty大量使用<code>ChannelFuture</code>，它是一个Java Future的拓展版本支持注册回调方法。Netty还使用了<code>Promise</code>对象，一个可以被写入的Future，与Java1.8的CompletableFuture非常类似。<br>在本文中，我们将讨论数据模型、展示一个pipeline的例子以及线程模型和它们的实现。</p>
+<h2 id="数据模型"><a href="#数据模型" class="headerlink" title="数据模型"></a>数据模型</h2><p>Netty的数据模型相当简单：核心模型是<code>Channel</code>，每个<code>Channel</code>都有自己的<code>ChannelPipeline</code>并且每个<code>Channel</code>都关联到<code>EventLoopGroup</code>中的一个<code>EventLoop</code>上。</p>
+<img src="/2022/09/04/netty/NettyDataModelThreadingAndGotchas/netty1.png" class="">
+<h3 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h3><p>Netty Channel是进站/出站数据的载体：与Java NIO Channel是同样的概念。举个例子，对于 TCP 它代表一个与远程主机的连接，对于 UDP 它代表出站数据报的地址或者本地端口上进站数据的监听。每个<code>Channel</code>都有自己的<code>ChannelPipeline</code>：稍后会详细介绍。在<code>Channel</code>上会触发事件，例如当<code>Channel</code>注册/取消注册时，当它处于活动/非活动状态时，或者当接收或发送字节时。<br><code>Channel</code>可以被用于不同的传输，例如 OIO ，NIO，EPoll (Linux)，KQueue (BSD/MacOS)，Local (within the same JVM)，或者Embedded（经常用于集成测试）。使用的<code>Channel</code>实现取决于传输及socket类型，例如<code>NioServerSocketChannel</code>（NIO传输，server socket），<code>NioSocketChannel</code>（NIO传输，client socket）,<code>EPollDatagramChannel</code>（EPoll 传输，UDP socket）。并不是所有的<code>Channel</code>实现都有相同的特性，比如NIO和EPoll/KQueue支持零拷贝，而其他的实现不支持。</p>
+<h3 id="ChannelPipeline"><a href="#ChannelPipeline" class="headerlink" title="ChannelPipeline"></a>ChannelPipeline</h3><p>每个<code>Channel</code>都有唯一一个<code>ChannelPipeline</code>。<code>ChannelPipeline</code>是一个<code>ChannelHandler</code>的列表，每个<code>ChannelHandler</code>可能是一个<code>ChannelInboundHandler</code>（处理进站<strong>事件</strong>），或者<code>ChannelOutboundHandler</code> （处理出站<strong>事件</strong>），或者两者兼有。</p>
+<img src="/2022/09/04/netty/NettyDataModelThreadingAndGotchas/netty2.png" class="">
+<p>这些<code>ChannelHandler</code>是基于 Netty 的服务器或驱动程序的主力：它们包含应用程序或客户端的业务逻辑。它们的功能与 Unix 管道非常相似：事件进入管道的一端，由一系列处理程序处理，然后通过管道的另一端退出，除非它们被丢弃。一个<code>ChannelHandler</code>必须显式地触发下一个处理相关payload的<code>ChannelHandler</code>,否则处理流程不会继续。第一个入站<code>ChannelHandler</code>从socket接收一个 ByteBuf（见下文），最后一个出站<code>ChannelHandler</code>产生一个 ByteBuf 以写入socket。将字节解码为消息的<code>ChannelHandler</code>通常扩展 Netty 提供的 <code>ByteToMessageDecoder</code>，将消息编码为字节的<code>ChannelHandler</code>通常扩展 <code>MessageToByteEncoder</code>。Netty提供MessageToMessageDecoder/Encoder/Codec用以简化一些通用的<code>ChannelHandler</code>的编写。<br>注意，<code>ChannelPipeline</code> 可以由<code>ChannelHandler</code>自己修改。例如，实现 STARTTLS 的应用程序可能会在连接升级为使用 TLS 后删除实现 TLS 握手的<code>ChannelHandler</code>。我们将在本文后面介绍另一个动态修改的<code>ChannelPipeline</code>示例。<br><code>ByteBuf</code>是NIO ByteBuffer的Netty定制版。Netty实现自己的缓冲区是为了简化API（例如不需要切换读写模式）和添加功能（例如零拷贝）。一个<code>ByteBuf</code>可以表示JVM堆内存（heap memory）和堆外内存（native memory）,或者两者的组合。池化和引用计数可用于提高性能，了解它们的工作原理是使用 Netty 编写高性能应用程序的关键。在本文中，我们专注于使用 Netty 调试和扩展代码，因此我们不会太仔细地研究它们。</p>
+<h3 id="EventLoopGroup"><a href="#EventLoopGroup" class="headerlink" title="EventLoopGroup"></a>EventLoopGroup</h3><p>它是<code>EventLoop</code>对象的容器。每个<code>EventLoop</code>对象都只与<strong>一个线程</strong>相关联。每个<code>Channel</code>在其生命周期内都与一个<code>EventLoop</code>相关联。</p>
+<img src="/2022/09/04/netty/NettyDataModelThreadingAndGotchas/netty3.png" class="">
+<p>虽然每个<code>Channel</code>都与一个<code>EventLoop</code>相关联，但是一个<code>EventLoop</code>最终可能绑定多个<code>Channel</code>。这是很重要的一个点，我们稍后会讨论其中的含义。<br><code>EventLoopGroup</code>有多种实现，特定的实现必须匹配其传输：例如，<code>NIOEventLoopGroup</code>必须用于NIO传输，<code>OIOEventLoopGroup</code>必须用于OIO传输等等。<code>EventLoopGroup</code>的实现决定了其中创建的<code>EventLoop</code>的数量：<code>OIOEventLoopGroup</code>为每个新的<code>Channel</code>都创建一个新的<code>EventLoop</code>，而NIO/EPoll/Kqueue的实现创建2倍于处理器数量的<code>EventLoop</code>并均匀地分发给不同的<code>Channel</code>。<br><code>Channel</code>的所有event和handler都在其单个 EventLoop 上执行。这些 EventLoop 对象可以被认为是 I/O 线程，因为它们处理 Netty 应用程序或驱动程序中的所有 I/O，包括在<code>ChannelPipeline</code>中的<code>ChannelHandler</code>中发生的任何处理。</p>
+<h2 id="使用Netty"><a href="#使用Netty" class="headerlink" title="使用Netty"></a>使用Netty</h2><p>Netty最常用于基于 TCP 的客户端-服务器上下文中，因此下面的讨论假设如此。</p>
+<h3 id="服务端与客户端"><a href="#服务端与客户端" class="headerlink" title="服务端与客户端"></a>服务端与客户端</h3><p>服务端代码使用<code>ServerBootstrap</code>对象初始化Netty。初始化时会创建一个server channel，这个channel产生子channel来处理客户端。当创建server channel，必须提供两个<code>EventLoopGroup</code>对象，一个绑定给主server channel，一个供子channel使用。完全配置<code>ServerBootstrap</code>后，将其绑定到端口并等待连接。<br>请注意，虽然从技术上讲，可以为服务器和子通道使用相同的<code>EventLoopGroup</code>，但这可能是个坏主意，因为最终可能会在服务器和客户端通道之一之间共享单个<code>EventLoop</code>，并且客户端通道可能最终阻止server channel 使用<code>EventLoop</code>，从而阻止服务器接受连接。<br>与服务端类似，客户端使用<code>Bootstrap</code>对象引导。它配置一个单独的<code>EventLoopGroup</code>，以及<code>ChannelHandler</code>等等。随后，你可以连接到一个远程的端口，然后通过channel进行读写。</p>
+<h3 id="ChannelPipeline-实例"><a href="#ChannelPipeline-实例" class="headerlink" title="ChannelPipeline 实例"></a>ChannelPipeline 实例</h3><p>如前所述，<code>ChannelPipeline</code>及其关联的<code>ChannelHandler</code>链是基于 Netty 的应用程序或驱动程序的核心。Netty 提供<code>ChannelHandler</code>实现来简化开发，例如处理 TLS、编码/解码 HTTP 以及实现 WebSocket 协议。例如，下图说明了 Netty pipeline的简化版本，用于在服务器上实现 WebSocket 协议。</p>
+<img src="/2022/09/04/netty/NettyDataModelThreadingAndGotchas/netty4.png" class="">
+<p>最上面一行是处理来自客户端的请求的<code>ChannelInboundHandler</code>。最下面一行是一个<code>ChannelOutboundHandler</code>，它将响应分派给客户端。描述的所有 <code>ChannelHandler</code>都是由 Netty 提供的，因此开发人员需要做的就是将它们串在一起以实现 WebSocket 协议。这种开箱即用的方法是 Netty 构建高性能和高并发服务器组件的重要组成部分。<br>WebSocket 协议更有趣的一点是该协议包括从 HTTP 到 WebSockets 的upgrade。此时，某些HTTP特定的组件不再需要了。Netty的WebSocket<code>ChannelHandlers</code>通过动态修改<code>ChannelPipeline</code>响应这一点。</p>
+<img src="/2022/09/04/netty/NettyDataModelThreadingAndGotchas/netty5.png" class="">
+<p>上面的简化图显示了<code>ChannelHandler</code>如何通过删除不再需要的组件来清理自己的<code>ChannelPipeline</code>。重写pipeline是一个非常强大的功能，尽管它会让事情变得有点难以理解。<br>有关设置<code>ChannelPipeline</code>的深入示例，可以看看<a target="_blank" rel="noopener" href="https://docs.datastax.com/en/developer/java-driver/4.13/">Datastax Java Driver for Apache Cassandra®</a>怎样设置它的<a target="_blank" rel="noopener" href="https://github.com/datastax/java-driver/blob/4.13.0/core/src/main/java/com/datastax/oss/driver/internal/core/channel/ChannelFactory.java#L350">ChannelPipeline</a>。  </p>
+<h3 id="线程相关"><a href="#线程相关" class="headerlink" title="线程相关"></a>线程相关</h3><p>正如我们之前所了解的，每个<code>Channel</code>都被分配了一个<code>EventLoop</code>，它对应于一个 I/O 线程。除了 OIO（它为每个 Channel 创建一个新的 EventLoop）之外，<code>EventLoop</code>是从<code>EventLoopGroup</code>中均匀分配的。<br>这个简单的线程模型意味着你在实现<code>ChannelHandler</code>逻辑时不需要担心并发问题。在一次pipeline的执行流程中，Netty会保证单线程地线性执行。更进一步，因为不需要创建大量的线程（默认2倍处理器数量），CPU不必承担过重的上下文切换负载。<br>另一方面，需要注意不要创建多个<code>EventLoopGroup</code>，因为每个<code>EventLoopGroup</code>都会创建自己的线程池。一个例外是指定server<code>EventLoopGroup</code>和子channel<code>EventLoopGroup</code>，你不希望用于接受连接的线程也用于处理它们，因为如果它被占用，你的服务器将成为接受连接的瓶颈。<br>非常需要注意的是，由于<code>EventLoop</code>（或者说线程池）是由多个<code>channel</code>共享的，所以一个<code>channel</code>处理缓慢会影响到多个请求，尤其是当连接/channel的数量急剧增长超过<code>EventLoop</code>中线程的数量时。这可能是这里最大的与线程相关的问题，因此需要重申：任何密集的处理都应该隔离到一个单独的线程，你不应该在你的<code>ChannelHandler</code>中长时间阻塞。因为如果你锁定了一个<code>EventLoop</code>，任何其他碰巧分配了相同<code>EventLoop</code>的请求/channel都将被阻塞，等待<code>EventLoop</code>释放。例如，这可能会导致瓶颈，<a target="_blank" rel="noopener" href="https://issues.apache.org/jira/browse/CASSANDRA-15013">CASSANDRA-15013</a>和相关的<a target="_blank" rel="noopener" href="https://cassandra.apache.org/_/blog/Improving-Apache-Cassandras-Front-Door-and-Backpressure.html">blog</a>。  </p>
+<h2 id="要点"><a href="#要点" class="headerlink" title="要点"></a>要点</h2><p>如果你跳到最后，或者你只需要复习，这里是最重要的要点：</p>
+<ul>
+<li><code>Channel</code>是主要容器，它包含一个<code>ChannelPipeline</code>，并与来自<code>EventLoopGroup</code>的<code>EventLoop</code>（线程的容器）相关联。</li>
+<li><code>ChannelPipeline</code>包含一个包含业务逻辑的<code>ChannelInboundHandler</code>（处理入站消息）和<code>ChannelOutboundHandler</code>（处理出站消息）链。</li>
+<li><code>EventLoop</code>本质上是一个 I/O 线程，可以被多个<code>Channel</code>共享。<code>ChannelHandler</code>在这些<code>EventLoop</code>线程上执行。</li>
+<li>Server 和 Client 初始化类似，除了 ServerChannel 处理接受连接并创建子通道来服务请求。</li>
+<li>不要为你的server Channel 和你的子 Channel 使用相同的<code>EventLoopGroup</code>。</li>
+<li>Netty 带有大量可以在应用程序中使用的内建的handler（例如用于 TLS）。</li>
+<li>如果<code>ChannelHandler</code>阻塞或很慢，它们将阻碍处理碰巧使用相同<code>EventLoop</code>的<code>Channel</code>上的请求。</li>
+</ul>
+
+        </div>
+
+        
+        <section class="post-tags">
+            <div>
+                <span>标签:</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Netty/"># Netty</a>
+                    
+                        <a href="/tags/%E7%BF%BB%E8%AF%91/"># 翻译</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回</a>
+                <span>· </span>
+                <a href="/">首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2022/03/29/distributed-system/cdc/">Change Data Capture</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <!-- <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© Evan | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+ -->
+    </div>
+</body>
+</html>
